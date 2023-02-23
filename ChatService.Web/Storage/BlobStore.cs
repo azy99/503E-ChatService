@@ -19,7 +19,7 @@ public class BlobStore: IFileStore
 
     public async Task UploadFile(UploadFileRequest request)
     {
-        if (request.ImageRequest.File == null)
+        if (request.ImageRequest == null || request.ImageRequest.File == null || request.UniqueFileId == null)
         {
             throw new ArgumentException($"Invalid file {request.ImageRequest}", nameof(request.ImageRequest));
         }
@@ -66,7 +66,12 @@ public class BlobStore: IFileStore
         }
         catch (RequestFailedException exception)
         {
-            throw exception;
+            if (exception.Status == 404)
+            {
+                return;
+            }
+
+            throw;
         }
             
        
