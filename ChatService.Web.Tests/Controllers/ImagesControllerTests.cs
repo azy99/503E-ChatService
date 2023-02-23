@@ -1,11 +1,9 @@
 using System.Net;
 using System.Net.Http.Headers;
-using System.Text;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using Newtonsoft.Json;
 using ChatService.Web.Dtos;
 using ChatService.Web.Storage;
 
@@ -23,11 +21,15 @@ public class ImagesControllerTests : IClassFixture<WebApplicationFactory<Program
         }).CreateClient();
     }
 
-    // [Fact]
-    // public async Task DownloadImage()
-    // {
-    //     TODO
-    // }
+    [Fact]
+    public async Task DownloadImage()
+    {
+        byte[] imageContent = File.ReadAllBytes("../../../test.jpg");
+        MemoryStream stream = new MemoryStream(imageContent);
+        _fileStoreMock.Setup(m => m.DownloadFile("abcdef")).ReturnsAsync(new BlobResponse(ImageId: "abcdef", ContentType: "image/jpeg", Content: stream));
+        var response = await _httpClient.GetAsync($"/Images/abcdef");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    }
     
     [Fact]
     public async Task UploadImage()
