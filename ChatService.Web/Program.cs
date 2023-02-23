@@ -1,3 +1,4 @@
+using Azure.Storage.Blobs;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Options;
 using ChatService.Web.Configuration;
@@ -14,6 +15,7 @@ builder.Services.AddSwaggerGen();
 
 // Add Configuration
 builder.Services.Configure<CosmosSettings>(builder.Configuration.GetSection("Cosmos"));
+builder.Services.Configure<BlobSettings>(builder.Configuration.GetSection("Blob"));
 
 // Add Services
 builder.Services.AddSingleton<IProfileStore, CosmosProfileStore>();
@@ -22,6 +24,15 @@ builder.Services.AddSingleton(sp =>
     var cosmosOptions = sp.GetRequiredService<IOptions<CosmosSettings>>();
     return new CosmosClient(cosmosOptions.Value.ConnectionString);
 });
+builder.Services.AddSingleton<IFileStore, BlobStore>();
+builder.Services.AddSingleton(sp =>
+{
+    var blobOptions = sp.GetRequiredService<IOptions<BlobSettings>>();
+    return new BlobContainerClient(blobOptions.Value.ConnectionString, blobOptions.Value.ContainerName);
+
+});
+
+var blobServiceClient = new BlobServiceClient("DefaultEndpointsProtocol=https;AccountName=yuneschibani;AccountKey=8te+CN7tG9282JbJ4uidYA07reDXep5Lu7btF5xheAr+MLVcuPCGA8S7NfVDT7xnmAdofmFfxO8m+AStQWkR6Q==;EndpointSuffix=core.windows.net");
 
 var app = builder.Build();
 
