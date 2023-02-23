@@ -27,4 +27,8 @@
       <ProjectReference Include="..\ChatService.Web\ChatService.Web.csproj" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Include="bin\Debug\net7.0\test.jpg" />
+    </ItemGroup>
+
 </Project>
