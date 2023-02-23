@@ -6,11 +6,11 @@ namespace ChatService.Web.Controllers;
 
 [ApiController]
 [Route("[controller]")]
-public class ImageController : ControllerBase
+public class ImagesController : ControllerBase
 {
     private readonly IFileStore _fileStore;
     
-    public ImageController(IFileStore fileStore)
+    public ImagesController(IFileStore fileStore)
     {
         _fileStore = fileStore;
     }
