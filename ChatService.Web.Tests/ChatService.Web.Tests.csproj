@@ -31,4 +31,8 @@
       <None Include="bin\Debug\net7.0\test.jpg" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Folder Include="bin\Debug\net7.0" />
+    </ItemGroup>
+
 </Project>

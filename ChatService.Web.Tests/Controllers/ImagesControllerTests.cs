@@ -32,7 +32,7 @@ public class ImagesControllerTests : IClassFixture<WebApplicationFactory<Program
     [Fact]
     public async Task UploadImage()
     {
-        byte[] imageContent = File.ReadAllBytes("test.jpg");
+        byte[] imageContent = File.ReadAllBytes("../../../test.jpg");
         MemoryStream stream = new MemoryStream(imageContent);
         HttpContent fileStreamContent = new StreamContent(stream);
         fileStreamContent.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
