@@ -35,12 +35,12 @@ public class ImagesController : ControllerBase
 
     }
 
-    [HttpDelete("{imageId}")]
-    public async Task<ActionResult> DeleteImage(string imageId)
-    {
-        await _fileStore.DeleteFile(imageId);
-        return NoContent();
-    }
+    // [HttpDelete("{imageId}")]
+    // public async Task<ActionResult> DeleteImage(string imageId)
+    // {
+    //     await _fileStore.DeleteFile(imageId);
+    //     return NoContent();
+    // }
     
     
     
