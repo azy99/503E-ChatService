@@ -1,3 +1,5 @@
+using System.Net;
+using System.Net.Mime;
 using Azure;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
@@ -23,12 +25,13 @@ public class BlobStore: IFileStore
 
         try
         {
-            BlobClient blobClient = _blobContainerClient.GetBlobClient(file.File.FileName);
+            String uniqueFileId = $"{Guid.NewGuid()}";
+            BlobClient blobClient = _blobContainerClient.GetBlobClient(uniqueFileId);
             
             await using (Stream? data = file.File.OpenReadStream())
             {
                  await blobClient.UploadAsync(data);
-                 return new UploadImageResponse(ImageId: file.File.FileName );
+                 return new UploadImageResponse(ImageId: uniqueFileId );
             }
         }
         catch (RequestFailedException exception)
@@ -40,7 +43,7 @@ public class BlobStore: IFileStore
 
     }
 
-    public async Task<Stream> DownloadFile(string fileId)
+    public async Task<BlobResponse> DownloadFile(string fileId)
     {
         try
         {
@@ -48,15 +51,21 @@ public class BlobStore: IFileStore
             if (await blobClient.ExistsAsync())
             {
                 Response<BlobDownloadInfo> response = await blobClient.DownloadAsync();
-                return response.Value.Content;
+                return new BlobResponse(ImageId: fileId, ContentType: "image/jpeg",
+                    Content: response.Value.Content);
             }
         }
         catch (RequestFailedException exception)
         {
-           
+            if (exception.Status == 404)
+            {
+                return new BlobResponse(ImageId: fileId, ContentType: null, Content: null);
+            }
+
+            throw;
         }
 
-        return null;
+        return new BlobResponse(ImageId: fileId, ContentType: null, Content: null);
     }
 
     public async Task DeleteFile(string fileId)
