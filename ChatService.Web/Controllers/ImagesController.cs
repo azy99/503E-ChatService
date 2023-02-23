@@ -29,9 +29,9 @@ public class ImagesController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<UploadImageResponse>> UploadImage([FromForm] UploadImageRequest request)
     {
-       var response = await _fileStore.UploadFile(request);
-
-       return CreatedAtAction(nameof(DownloadImage), new {imageId=response.ImageId}, response);
+        String uniqueFileId = $"{Guid.NewGuid()}";
+        await _fileStore.UploadFile(new UploadFileRequest(ImageRequest: request, UniqueFileId: uniqueFileId));
+        return CreatedAtAction(nameof(DownloadImage), new {imageId=uniqueFileId}, new UploadImageResponse(ImageId: uniqueFileId));
 
     }
 
