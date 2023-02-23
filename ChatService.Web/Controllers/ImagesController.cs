@@ -18,9 +18,12 @@ public class ImageController : ControllerBase
     [HttpGet("{imageId}")]
     public async Task<IActionResult> DownloadImage(string imageId)
     {
-        Stream imageStream = await _fileStore.DownloadFile(imageId);
-        string contentType = "image/png";
-        return File(imageStream, contentType);
+        BlobResponse response = await _fileStore.DownloadFile(imageId);
+        if (response.Content == null)
+        {
+            return NotFound($"An image with {imageId} was not found");
+        }
+        return File(response.Content, response.ContentType);
     }
     
     [HttpPost]
