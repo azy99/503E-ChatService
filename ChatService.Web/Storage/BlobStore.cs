@@ -4,6 +4,7 @@ using Azure;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using ChatService.Web.Dtos;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace ChatService.Web.Storage;
 
@@ -16,31 +17,19 @@ public class BlobStore: IFileStore
         _blobContainerClient = blobContainerClient;
     }
 
-    public async Task<UploadImageResponse?> UploadFile(UploadImageRequest file)
+    public async Task UploadFile(UploadFileRequest request)
     {
-        if (file.File == null)
+        if (request.ImageRequest.File == null)
         {
-            throw new ArgumentException($"Invalid file {file}", nameof(file));
+            throw new ArgumentException($"Invalid file {request.ImageRequest}", nameof(request.ImageRequest));
         }
-
-        try
+        
+        BlobClient blobClient = _blobContainerClient.GetBlobClient(request.UniqueFileId);
+        await using (Stream? data = request.ImageRequest.File.OpenReadStream())
         {
-            String uniqueFileId = $"{Guid.NewGuid()}";
-            BlobClient blobClient = _blobContainerClient.GetBlobClient(uniqueFileId);
-            
-            await using (Stream? data = file.File.OpenReadStream())
-            {
-                 await blobClient.UploadAsync(data);
-                 return new UploadImageResponse(ImageId: uniqueFileId );
-            }
+             await blobClient.UploadAsync(data);
         }
-        catch (RequestFailedException exception)
-        {
-            
-        }
-
-        return null;
-
+        
     }
 
     public async Task<BlobResponse> DownloadFile(string fileId)

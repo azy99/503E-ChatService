@@ -5,7 +5,7 @@ namespace ChatService.Web.Storage;
 
 public interface IFileStore
 {
-    Task<UploadImageResponse?> UploadFile(UploadImageRequest file);
+    Task UploadFile(UploadFileRequest fileRequest);
     Task<BlobResponse> DownloadFile(string fileId);
     Task DeleteFile(string fileId);
 }
