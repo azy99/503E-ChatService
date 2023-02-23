@@ -32,6 +32,16 @@ public class ImagesControllerTests : IClassFixture<WebApplicationFactory<Program
     }
     
     [Fact]
+    public async Task DownloadImage_NotFound()
+    {
+        _fileStoreMock.Setup(m => m.DownloadFile("abcdef")).ReturnsAsync(new BlobResponse(ImageId: "abcdef", ContentType: null , Content: null));
+        var response = await _httpClient.GetAsync($"/Images/abcdef");
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+    }
+    
+    
+    
+    [Fact]
     public async Task UploadImage()
     {
         byte[] imageContent = File.ReadAllBytes("../../../test.jpg");
