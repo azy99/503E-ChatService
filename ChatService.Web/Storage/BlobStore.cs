@@ -1,10 +1,7 @@
-using System.Net;
-using System.Net.Mime;
 using Azure;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using ChatService.Web.Dtos;
-using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace ChatService.Web.Storage;
 
@@ -73,8 +70,6 @@ public class BlobStore: IFileStore
 
             throw;
         }
-            
-       
         
 
     }
