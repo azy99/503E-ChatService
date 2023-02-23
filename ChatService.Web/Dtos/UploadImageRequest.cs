@@ -1,3 +1,5 @@
+using System.ComponentModel.DataAnnotations;
+
 namespace ChatService.Web.Dtos;
 
-public record UploadImageRequest(IFormFile File);
+public record UploadImageRequest([Required] IFormFile File);

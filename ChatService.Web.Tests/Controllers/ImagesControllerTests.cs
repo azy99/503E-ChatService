@@ -29,6 +29,7 @@ public class ImagesControllerTests : IClassFixture<WebApplicationFactory<Program
         _fileStoreMock.Setup(m => m.DownloadFile("abcdef")).ReturnsAsync(new BlobResponse(ImageId: "abcdef", ContentType: "image/jpeg", Content: stream));
         var response = await _httpClient.GetAsync($"/Images/abcdef");
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        _fileStoreMock.Verify(mock=>mock.DownloadFile("abcdef"), Times.Once);
     }
     
     [Fact]
@@ -37,6 +38,7 @@ public class ImagesControllerTests : IClassFixture<WebApplicationFactory<Program
         _fileStoreMock.Setup(m => m.DownloadFile("abcdef")).ReturnsAsync(new BlobResponse(ImageId: "abcdef", ContentType: null , Content: null));
         var response = await _httpClient.GetAsync($"/Images/abcdef");
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        _fileStoreMock.Verify(mock=>mock.DownloadFile("abcdef"), Times.Once);
     }
     
     
@@ -54,8 +56,16 @@ public class ImagesControllerTests : IClassFixture<WebApplicationFactory<Program
         };
         using var formData = new MultipartFormDataContent();
         formData.Add(fileStreamContent);
-        var response = await _httpClient.PostAsync("Images", formData);
+        var response = await _httpClient.PostAsync("/Images", formData);
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+    }
+    
+    [Fact]
+    public async Task UploadImage_Null()
+    {
+        var response = await _httpClient.PostAsync("/Images", null);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        _fileStoreMock.Verify(mock=>mock.UploadFile(null), Times.Never);
     }
     
     
