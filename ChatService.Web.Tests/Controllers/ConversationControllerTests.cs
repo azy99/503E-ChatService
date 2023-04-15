@@ -52,7 +52,7 @@ namespace ChatService.Web.Tests.Controllers
         {
             var expectedResponse = new StartConversationResponse("123", 12345678);
             Message message = new Message("1", "fel", "faa");
-            var request = new StartConversationRequest(new List<string> { "foo1", "foo2" }, message);
+            var request = new StartConversationRequest(new string[] { "foo1", "foo2" }, message);
             _conversationServiceMock.Setup(x => x.CreateConversation(It.IsAny<StartConversationRequest>()))
                             .ReturnsAsync(expectedResponse);
 

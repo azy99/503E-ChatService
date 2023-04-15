@@ -22,7 +22,7 @@ namespace ChatService.Web.Services
                 throw new NullStartConversationRequestException(nameof(request));
             }
 
-            if (request.Participants.Count < 2 || request.Participants.Count > 2 || request.Participants == null)
+            if (request.Participants.Length< 2 || request.Participants.Length > 2 || request.Participants == null)
             {
                 throw new ConversationNotTwoPeople();
             }
