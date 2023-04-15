@@ -5,7 +5,6 @@ namespace ChatService.Web.Dtos.Conversations
 {
     public record UserConversation(
         [Required] string Id,
-        [Required] long LastModifiedUnixTime,
-        [Required] Profile Recipient
+        [Required] long LastModifiedUnixTime
         );
 }
