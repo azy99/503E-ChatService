@@ -11,73 +11,47 @@ namespace ChatService.Web.Services
     public class ConversationService : IConversationService
     {
         private readonly IConversationStore _conversationStore;
-        private readonly IProfileStore _profileStore;
-        public ConversationService(IConversationStore conversationStore, IProfileStore profileStore)
+        private readonly IMessageStore _messageStore;
+        private readonly IValidationManager _validationManager;
+        public ConversationService(IConversationStore conversationStore, IMessageStore messageStore, IValidationManager validationManager)
         {
             _conversationStore = conversationStore;
-            _profileStore = profileStore;
+            _messageStore = messageStore;
+            _validationManager = validationManager;
         }
-        public Task<StartConversationResponse> CreateConversation(StartConversationRequest request)
-            //TODO CALL THE AddConversation on both sides
+        public async Task<StartConversationResponse> CreateConversation(StartConversationRequest request)
         {
-            //create current time, add it to request and ccall _conversationStore.UpdateConversation(request)
-            ValidateConversation(request);
+            _validationManager.ValidateConversation(request);
 
+            UserMessage message = new (
+                request.FirstMessage.Id,
+                request.FirstMessage.Text,
+                request.FirstMessage.SenderUsername,
+                UnixTime : DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                );
 
+            //CAN GET RECIPIENT IN GET BY SPLITTING ID
+            UserConversation conversation1 = new (
+                Id : request.Participants[0] + "_" + request.Participants[1],
+                LastModifiedUnixTime : DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                );
+            UserConversation conversation2 = new(
+                Id: request.Participants[1] + "_" + request.Participants[2],
+                LastModifiedUnixTime: DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                );
 
-            return _conversationStore.AddConversation(request);
+            var addMessageTask = _messageStore.AddMessage(message);
+            var addConversation1Task = _conversationStore.AddConversation(conversation1);
+            var addConversation2Task = _conversationStore.AddConversation(conversation2);
+
+            await Task.WhenAll( addMessageTask, addConversation1Task, addConversation2Task );
+
+            return addConversation1Task.Result;
         }
 
         public Task<UserConversation?> GetConversation(string conversationID)
         {
             throw new NotImplementedException();
-        }
-
-
-        public void ValidateConversation(StartConversationRequest request)
-        {
-            if (request == null)
-            {
-                throw new NullStartConversationRequestException(nameof(request));
-            }
-
-            if (request.Participants.Count < 2 || request.Participants.Count > 2 || request.Participants == null)
-            {
-                throw new ConversationNotTwoPeople();
-            }
-            CheckIfSenderExists(request.Participants[0]);
-            CheckIfReceiverExists(request.Participants[1]);
-
-            ValidateMessage(request.FirstMessage);
-        }
-        public void ValidateMessage(Message message)
-        {
-            if (message == null)
-            {
-                throw new NullMessage();
-            }
-            if (string.IsNullOrEmpty(message.Id) ||
-               string.IsNullOrEmpty(message.SenderUsername) ||
-               string.IsNullOrEmpty(message.Text))
-            {
-                throw new InvalidMessageParams();
-            }
-        }
-        public void CheckIfSenderExists(string senderUsername)
-        {
-            var sender = _profileStore.GetProfile(senderUsername);
-            if (sender == null)
-            {
-                throw new SenderDoesNotExist(senderUsername);
-            }
-        }
-        public void CheckIfReceiverExists(string receiverUsername)
-        {
-            var recipient = _profileStore.GetProfile(receiverUsername);
-            if (recipient == null)
-            {
-                throw new ReceiverDoesNotExist(receiverUsername);
-            }
         }
     }
 }
