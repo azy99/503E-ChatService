@@ -1,5 +1,7 @@
-﻿using ChatService.Web.Dtos.Conversations;
+﻿using Azure.Core;
+using ChatService.Web.Dtos.Conversations;
 using ChatService.Web.Dtos.Messages;
+using ChatService.Web.Dtos.Profiles;
 using ChatService.Web.Exceptions;
 using ChatService.Web.Storage;
 
@@ -9,17 +11,20 @@ namespace ChatService.Web.Services
     public class ConversationService : IConversationService
     {
         private readonly IConversationStore _conversationStore;
-        public ConversationService(IConversationStore conversationStore)
+        private readonly IProfileStore _profileStore;
+        public ConversationService(IConversationStore conversationStore, IProfileStore profileStore)
         {
             _conversationStore = conversationStore;
+            _profileStore = profileStore;
         }
-
         public Task<StartConversationResponse> CreateConversation(StartConversationRequest request)
             //TODO CALL THE AddConversation on both sides
-            //TODO Add Validations here
-            //TODO Add toEntitie in service
         {
             //create current time, add it to request and ccall _conversationStore.UpdateConversation(request)
+            ValidateConversation(request);
+            ValidateMessage(request.FirstMessage);
+
+
 
             return _conversationStore.AddConversation(request);
         }
@@ -41,6 +46,8 @@ namespace ChatService.Web.Services
             {
                 throw new ConversationNotTwoPeople();
             }
+            CheckIfSenderExists(request.Participants[0]);
+            CheckIfReceiverExists(request.Participants[1]);
 
             ValidateMessage(request.FirstMessage);
         }
@@ -56,7 +63,22 @@ namespace ChatService.Web.Services
             {
                 throw new InvalidMessageParams();
             }
-
+        }
+        public void CheckIfSenderExists(string senderUsername)
+        {
+            var sender = _profileStore.GetProfile(senderUsername);
+            if (sender == null)
+            {
+                throw new SenderDoesNotExist(senderUsername);
+            }
+        }
+        public void CheckIfReceiverExists(string receiverUsername)
+        {
+            var recipient = _profileStore.GetProfile(receiverUsername);
+            if (recipient == null)
+            {
+                throw new ReceiverDoesNotExist(receiverUsername);
+            }
         }
     }
 }

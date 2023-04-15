@@ -7,5 +7,4 @@ namespace ChatService.Web.Dtos.Conversations
         [Required] List<string> Participants,
         [Required] Message FirstMessage
         );
-
 }
