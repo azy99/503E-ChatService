@@ -22,7 +22,6 @@ namespace ChatService.Web.Services
         {
             //create current time, add it to request and ccall _conversationStore.UpdateConversation(request)
             ValidateConversation(request);
-            ValidateMessage(request.FirstMessage);
 
 
 
