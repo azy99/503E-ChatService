@@ -65,37 +65,6 @@ namespace ChatService.Web.Storage
             throw new NotImplementedException();
         }
 
-        public void ValidateConversation(StartConversationRequest request)
-        {
-            if (request == null)
-            {
-                throw new NullStartConversationRequestException(nameof(request));
-            }
-
-            if (request.Participants.Count < 2 || request.Participants.Count > 2 || request.Participants == null)
-            {
-                throw new ConversationNotTwoPeople();
-            }
-
-            ValidateMessage(request.FirstMessage);
-        }
-        public void ValidateMessage(Message message)
-        {
-            //But required validation in DTO should deal with that
-
-            //Only left to check if sender exists
-            if (message == null)
-            {
-                throw new NullMessage();
-            }
-            if(string.IsNullOrEmpty(message.Id)||
-               string.IsNullOrEmpty(message.SenderUsername)||
-               string.IsNullOrEmpty(message.Text))
-            {
-                throw new InvalidMessageParams();
-            }
-
-        }
         private static ConversationEntity ToEntity(StartConversationRequest request)   
         {
             return new ConversationEntity(
