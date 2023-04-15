@@ -1,10 +1,11 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using ChatService.Web.Dtos.Profiles;
+using System.ComponentModel.DataAnnotations;
 
 namespace ChatService.Web.Dtos.Conversations
 {
-    public record userConversation(
-        [Required] string Sender,
-        [Required] string Receiver
+    public record UserConversation(
+        [Required] string Id,
+        [Required] long LastModifiedUnixTime,
+        [Required] Profile Recipient
         );
-
 }

@@ -3,7 +3,7 @@
 namespace ChatService.Web.Dtos.Conversations
 {
     public record StartConversationResponse(
-        [Required] string ConversationId,
+        [Required] string Id,
         [Required] long CreatedUnixTime
     );
 }

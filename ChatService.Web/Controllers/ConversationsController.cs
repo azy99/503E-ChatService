@@ -16,7 +16,7 @@ namespace ChatService.Web.Controllers
             _conversationService = conversationService;
         }
         [HttpGet("{conversationId}")]
-        public async Task<ActionResult<userConversation>> GetConversation(string conversationId)
+        public async Task<ActionResult<UserConversation>> GetConversation(string conversationId)
         {
             var conversation = await _conversationService.GetConversation(conversationId);
             if (conversation == null)
@@ -29,12 +29,9 @@ namespace ChatService.Web.Controllers
         [HttpPost]
         public async Task<ActionResult<StartConversationResponse>> AddConversation(StartConversationRequest request)
         {
-            //TODO ADD VALIDATION FOR INCORRECT INPUT
-           // ValidateConversation(request); Validation done on storage layer?
-
             StartConversationResponse response = await _conversationService.CreateConversation(request);
 
-            return CreatedAtAction(nameof(GetConversation), new { conversationId = response.ConversationId }, response);
+            return CreatedAtAction(nameof(GetConversation), new { Id = response.Id }, response);
         }
 
         //[HttpPut("conversationId")]{

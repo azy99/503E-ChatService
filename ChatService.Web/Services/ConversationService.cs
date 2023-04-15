@@ -23,7 +23,7 @@ namespace ChatService.Web.Services
             return _conversationStore.AddConversation(request);
         }
 
-        public Task<userConversation?> GetConversation(string conversationID)
+        public Task<UserConversation?> GetConversation(string conversationID)
         {
             throw new NotImplementedException();
         }
