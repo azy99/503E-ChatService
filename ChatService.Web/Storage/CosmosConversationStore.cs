@@ -19,25 +19,24 @@ namespace ChatService.Web.Storage
 
         private Container Container => _cosmosClient.GetDatabase("profiles").GetContainer("sharedContainer");
 
-        public async Task<StartConversationResponse> AddConversation(StartConversationRequest request)
+        public async Task<StartConversationResponse> AddConversation(UserConversation UserConversation)
         {
-            var entity = ToEntity(request);
+            var ConversationEntity = ToEntity(UserConversation);
             try
             {
-                ValidateConversation(request);
-                await Container.CreateItemAsync(entity);
+                await Container.CreateItemAsync(ConversationEntity);
             }
             catch (CosmosException e)
             {
                 if (e.StatusCode == HttpStatusCode.Conflict)
                 {
                     //Should you return this or call get and return what you get?
-                    return await GetConversation(entity.Id);
+                    return await GetConversation(ConversationEntity.Id);
                 }
 
                 throw;
             }
-            return ToStartConversationResponse(entity);
+            return ToStartConversationResponse(ConversationEntity);
         }
 
         public async Task<StartConversationResponse?> GetConversation(string conversationID)
@@ -59,25 +58,25 @@ namespace ChatService.Web.Storage
                 throw;
             }
         }
-
-        public Task UpsertConversation(StartConversationRequest conversation)
+        public Task UpsertConversation(UserConversation UserConversation)
         {
             throw new NotImplementedException();
         }
 
-        private static ConversationEntity ToEntity(StartConversationRequest request)   
+        private static ConversationEntity ToEntity(UserConversation UserConversation)   
         {
+            var Participants = UserConversation.Id.Split('_');
             return new ConversationEntity(
-                partitionKey: request.Participants[0],
-                Id: request.Participants[0] + "_" + request.Participants[1],
-                LastModifiedUnixTime: DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(),
-                ReceiverUsername: request.Participants[1]
+                partitionKey: Participants[0],
+                Id: UserConversation.Id,
+                LastModifiedUnixTime: UserConversation.LastModifiedUnixTime,
+                ReceiverUsername: Participants[1]
             );
         }
         private static StartConversationResponse ToStartConversationResponse(ConversationEntity entity)
         {
             return new StartConversationResponse(
-                ConversationId: entity.Id,
+                Id: entity.Id,
                 CreatedUnixTime: entity.LastModifiedUnixTime
             );
         }
