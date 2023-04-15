@@ -1,10 +1,12 @@
-﻿namespace ChatService.Web.Storage.Entities
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace ChatService.Web.Storage.Entities
 {
     public record MessageEntity(
-        string partitionKey,    //ConversationId
-        string Id,              //messageId
-        string Text,
-        string SenderUsername,  
-        string UnixTime
+        [Required] string partitionKey,    //ConversationId
+        [Required] string Id,              //messageId
+        [Required] string Text,
+        [Required] string SenderUsername,
+        [Required] long UnixTime
         );
 }
