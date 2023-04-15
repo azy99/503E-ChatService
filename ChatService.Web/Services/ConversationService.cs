@@ -1,4 +1,4 @@
-﻿using ChatService.Web.Dtos;
+﻿using ChatService.Web.Dtos.Conversations;
 using ChatService.Web.Exceptions;
 using ChatService.Web.Storage;
 
@@ -19,6 +19,7 @@ namespace ChatService.Web.Services
             //TODO Add toEntitie in service
         {
             //create current time, add it to request and ccall _conversationStore.UpdateConversation(request)
+
             return _conversationStore.AddConversation(request);
         }
 
@@ -26,6 +27,8 @@ namespace ChatService.Web.Services
         {
             throw new NotImplementedException();
         }
+
+
         public void ValidateConversation(StartConversationRequest request)
         {
             if (request == null)
@@ -42,9 +45,6 @@ namespace ChatService.Web.Services
         }
         public void ValidateMessage(Message message)
         {
-            //But required validation in DTO should deal with that
-
-            //Only left to check if sender exists
             if (message == null)
             {
                 throw new NullMessage();

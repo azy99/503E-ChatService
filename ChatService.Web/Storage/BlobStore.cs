@@ -1,7 +1,7 @@
 using Azure;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
-using ChatService.Web.Dtos;
+using ChatService.Web.Dtos.Profile;
 
 namespace ChatService.Web.Storage;
 

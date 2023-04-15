@@ -10,12 +10,12 @@ using Microsoft.AspNetCore.TestHost;
 using System.Net;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
-using ChatService.Web.Dtos;
 using System.Net.Http;
 using ChatService.Web.Services;
 using Azure.Core;
 using ChatService.Web.Controllers;
 using System.Collections.Specialized;
+using ChatService.Web.Dtos.Conversations;
 
 namespace ChatService.Web.Tests.Controllers
 {

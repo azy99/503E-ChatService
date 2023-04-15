@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
-using ChatService.Web.Dtos;
 using ChatService.Web.Storage;
+using ChatService.Web.Dtos.Profile;
 
 namespace ChatService.Web.IntegrationTests;
 

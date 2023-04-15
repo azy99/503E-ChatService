@@ -1,5 +1,5 @@
 ﻿using ChatService.Web.Configuration;
-using ChatService.Web.Dtos;
+using ChatService.Web.Dtos.Conversations;
 using ChatService.Web.Exceptions;
 using ChatService.Web.Storage.Entities;
 using Microsoft.Azure.Cosmos;

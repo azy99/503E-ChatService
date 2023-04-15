@@ -1,4 +1,4 @@
-﻿using ChatService.Web.Dtos;
+﻿using ChatService.Web.Dtos.Conversations;
 using ChatService.Web.Exceptions;
 using ChatService.Web.Services;
 using ChatService.Web.Storage;

@@ -1,4 +1,4 @@
-﻿using ChatService.Web.Dtos;
+﻿using ChatService.Web.Dtos.Conversations;
 
 namespace ChatService.Web.Storage
 {
