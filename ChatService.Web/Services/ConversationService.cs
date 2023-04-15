@@ -24,20 +24,25 @@ namespace ChatService.Web.Services
             _validationManager.ValidateConversation(request);
 
             UserMessage message = new (
-                request.FirstMessage.Id,
-                request.FirstMessage.Text,
-                request.FirstMessage.SenderUsername,
+                ConversationId : request.Participants[0] + "_" + request.Participants[1],
+                Id: request.FirstMessage.Id,
+                Text: request.FirstMessage.Text,
+                SenderUsername: request.FirstMessage.SenderUsername,
                 UnixTime : DateTimeOffset.UtcNow.ToUnixTimeSeconds()
                 );
 
             //CAN GET RECIPIENT IN GET BY SPLITTING ID
             UserConversation conversation1 = new (
                 Id : request.Participants[0] + "_" + request.Participants[1],
-                LastModifiedUnixTime : DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                LastModifiedUnixTime : DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                Sender: request.Participants[0],
+                Receiver: request.Participants[1]
                 );
             UserConversation conversation2 = new(
-                Id: request.Participants[1] + "_" + request.Participants[2],
-                LastModifiedUnixTime: DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                Id: request.Participants[1] + "_" + request.Participants[0],
+                LastModifiedUnixTime: DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                Sender: request.Participants[1],
+                Receiver: request.Participants[0]
                 );
 
             var addMessageTask = _messageStore.AddMessage(message);

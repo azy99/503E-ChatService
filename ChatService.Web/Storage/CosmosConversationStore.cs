@@ -67,10 +67,10 @@ namespace ChatService.Web.Storage
         {
             var Participants = UserConversation.Id.Split('_');
             return new ConversationEntity(
-                partitionKey: Participants[0],
+                partitionKey: UserConversation.Sender,
                 Id: UserConversation.Id,
                 LastModifiedUnixTime: UserConversation.LastModifiedUnixTime,
-                ReceiverUsername: Participants[1]
+                ReceiverUsername: UserConversation.Receiver
             );
         }
         private static StartConversationResponse ToStartConversationResponse(ConversationEntity entity)
