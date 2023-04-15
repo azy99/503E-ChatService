@@ -31,7 +31,7 @@ namespace ChatService.Web.Controllers
         {
             StartConversationResponse response = await _conversationService.CreateConversation(request);
 
-            return CreatedAtAction(nameof(GetConversation), new { Id = response.Id }, response);
+            return CreatedAtAction(nameof(GetConversation), response);
         }
 
         //[HttpPut("conversationId")]{

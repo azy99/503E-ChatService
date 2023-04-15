@@ -16,6 +16,7 @@ using Azure.Core;
 using ChatService.Web.Controllers;
 using System.Collections.Specialized;
 using ChatService.Web.Dtos.Conversations;
+using ChatService.Web.Dtos.Messages;
 
 namespace ChatService.Web.Tests.Controllers
 {

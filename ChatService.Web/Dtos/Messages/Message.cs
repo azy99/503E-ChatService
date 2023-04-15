@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace ChatService.Web.Dtos.Conversations
+namespace ChatService.Web.Dtos.Messages
 {
     public record Message(
         [Required] string Id,
