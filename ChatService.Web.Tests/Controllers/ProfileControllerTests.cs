@@ -6,7 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using Newtonsoft.Json;
 using ChatService.Web.Storage;
-using ChatService.Web.Dtos.Profile;
+using ChatService.Web.Dtos.Profiles;
 
 namespace ChatService.Web.Tests.Controllers;
 
