@@ -1,4 +1,4 @@
-using ChatService.Web.Dtos.Profile;
+using ChatService.Web.Dtos.Profiles;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChatService.Web.Storage;

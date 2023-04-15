@@ -1,4 +1,4 @@
-using ChatService.Web.Dtos.Profile;
+using ChatService.Web.Dtos.Profiles;
 
 namespace ChatService.Web.Storage;
 

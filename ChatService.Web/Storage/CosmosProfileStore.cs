@@ -1,5 +1,5 @@
 using System.Net;
-using ChatService.Web.Dtos.Profile;
+using ChatService.Web.Dtos.Profiles;
 using ChatService.Web.Storage.Entities;
 using Microsoft.Azure.Cosmos;
 
