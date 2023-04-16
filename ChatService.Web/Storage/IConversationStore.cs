@@ -5,7 +5,7 @@ namespace ChatService.Web.Storage
     public interface IConversationStore
     {
         Task UpsertConversation(UserConversation UserConversation);
-        Task<StartConversationResponse?> GetConversation(string conversationID);
+        Task<UserConversation?> GetConversation(string conversationID);
         Task<StartConversationResponse> AddConversation(UserConversation UserConversation);
     }
 }

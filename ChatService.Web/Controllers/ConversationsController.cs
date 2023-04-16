@@ -4,6 +4,7 @@ using ChatService.Web.Services;
 using ChatService.Web.Storage;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.VisualBasic;
+using Newtonsoft.Json;
 
 namespace ChatService.Web.Controllers
 {
@@ -31,7 +32,7 @@ namespace ChatService.Web.Controllers
         {
             StartConversationResponse response = await _conversationService.CreateConversation(request);
 
-            return CreatedAtAction(nameof(GetConversation), response);
+           return CreatedAtAction(nameof(GetConversation), new { conversationId = response.Id}, response);
         }
 
         //[HttpPut("conversationId")]{
@@ -49,37 +50,6 @@ namespace ChatService.Web.Controllers
         //    _logger.LogInformation("Updated Profile for {Username}", profile.Username);
 
         //    return Ok(profile);
-        //}
-
-        //public void ValidateConversation(StartConversationRequest request)
-        //{
-        //    if(request == null)
-        //    {
-        //        throw new NullStartConversationRequestException(nameof(request));
-        //    }
-
-        //    var participantsCount = request.Participants.Count;
-        //    if(request.Participants.Count < 2 || request.Participants.Count>2) {
-        //        throw new ConversationNotTwoPeople();
-        //    }
-
-        //    ValidateMessage(request.FirstMessage);
-        //}
-
-        //public void ValidateMessage(Message message)
-        //{
-        //    //If ID null or empty
-        //    //If SenderUsername null or empty
-        //    //If text null or empty
-        //    //But required validation in DTO should deal with that
-
-        //    //Only left to check if sender exists
-        //    if(message == null)
-        //    {
-        //        throw new NullMessage();
-        //    }
-            
-        //}
     }
 
 }

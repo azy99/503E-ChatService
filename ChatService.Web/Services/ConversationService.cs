@@ -56,7 +56,7 @@ namespace ChatService.Web.Services
 
         public Task<UserConversation?> GetConversation(string conversationID)
         {
-            throw new NotImplementedException();
+            return _conversationStore.GetConversation(conversationID);
         }
     }
 }

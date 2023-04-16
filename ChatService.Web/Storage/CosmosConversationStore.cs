@@ -31,7 +31,8 @@ namespace ChatService.Web.Storage
                 if (e.StatusCode == HttpStatusCode.Conflict)
                 {
                     //Should you return this or call get and return what you get?
-                    return await GetConversation(ConversationEntity.Id);
+                    var existingConversation =  await GetConversation(ConversationEntity.Id);
+                    return FromUserConversationToStartConversationResponse(existingConversation);
                 }
 
                 throw;
@@ -39,7 +40,7 @@ namespace ChatService.Web.Storage
             return ToStartConversationResponse(ConversationEntity);
         }
 
-        public async Task<StartConversationResponse?> GetConversation(string conversationID)
+        public async Task<UserConversation?> GetConversation(string conversationID)
         {
             try
             {
@@ -47,7 +48,7 @@ namespace ChatService.Web.Storage
                     id: conversationID,
                     partitionKey: new PartitionKey(conversationID)
                 );
-                return ToStartConversationResponse(entity);
+                return ToUserConversation(entity);
             }
             catch (CosmosException e)
             {
@@ -66,7 +67,6 @@ namespace ChatService.Web.Storage
 
         private static ConversationEntity ToEntity(UserConversation UserConversation)   
         {
-            var Participants = UserConversation.Id.Split('_');
             return new ConversationEntity(
                 partitionKey: UserConversation.Sender,
                 Id: UserConversation.Id,
@@ -74,12 +74,28 @@ namespace ChatService.Web.Storage
                 ReceiverUsername: UserConversation.Receiver
             );
         }
+        private static UserConversation ToUserConversation(ConversationEntity entity)
+        {
+            return new UserConversation(
+                Id: entity.Id,
+                LastModifiedUnixTime: entity.LastModifiedUnixTime,
+                Sender: entity.partitionKey,
+                Receiver: entity.ReceiverUsername
+                                                                                       );
+        }
         private static StartConversationResponse ToStartConversationResponse(ConversationEntity entity)
         {
             return new StartConversationResponse(
                 Id: entity.Id,
                 CreatedUnixTime: entity.LastModifiedUnixTime
             );
+        }
+        private StartConversationResponse FromUserConversationToStartConversationResponse(UserConversation UserConversation)
+        {
+            return new StartConversationResponse(
+                Id: UserConversation.Id,
+                CreatedUnixTime: UserConversation.LastModifiedUnixTime
+                );
         }
     }
 }
