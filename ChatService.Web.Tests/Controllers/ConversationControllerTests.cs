@@ -96,7 +96,7 @@ namespace ChatService.Web.Tests.Controllers
         //    //_conversationServiceMock.Verify(m => m.CreateConversation(startConversationRequest), Times.Never);
         //}
 
-        //TODO Test for invalid arguments and conflict in service layer because logic is there?
+        //TODO Test for invalid arguments and conflict in service layer because logic is there? 
 
 
     }
