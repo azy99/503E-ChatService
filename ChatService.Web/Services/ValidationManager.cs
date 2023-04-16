@@ -6,13 +6,11 @@ using ChatService.Web.Storage;
 
 namespace ChatService.Web.Services
 {
-    public class ValidationManager: IValidationManager
+    public class ValidationManager
     {
-        private readonly IConversationStore _conversationStore;
         private readonly IProfileStore _profileStore;
-        public ValidationManager(IConversationStore conversationStore, IProfileStore profileStore)
+        public ValidationManager( IProfileStore profileStore)
         {
-            _conversationStore = conversationStore;
             _profileStore = profileStore;
         }
         public void ValidateConversation(StartConversationRequest request)
@@ -29,10 +27,10 @@ namespace ChatService.Web.Services
             CheckIfSenderExists(request.Participants[0]);
             CheckIfReceiverExists(request.Participants[1]);
 
-            ValidateMessage(request.FirstMessage,true);
+            ValidateMessage(request.FirstMessage);
 
         }
-        public void ValidateMessage(Message message,bool IsFirstMessage)
+        public void ValidateMessage(Message message)
         {
             if (message == null)
             {
@@ -44,10 +42,8 @@ namespace ChatService.Web.Services
             {
                 throw new InvalidMessageParams();
             }
-            if (!IsFirstMessage)
-            {
-                CheckIfSenderExists(message.SenderUsername);
-            }
+            CheckIfSenderExists(message.SenderUsername);
+            
         }
         public void CheckIfSenderExists(string senderUsername)
         {

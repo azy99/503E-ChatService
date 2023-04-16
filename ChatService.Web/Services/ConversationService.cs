@@ -12,12 +12,12 @@ namespace ChatService.Web.Services
     {
         private readonly IConversationStore _conversationStore;
         private readonly IMessageStore _messageStore;
-        private readonly IValidationManager _validationManager;
-        public ConversationService(IConversationStore conversationStore, IMessageStore messageStore, IValidationManager validationManager)
+        private readonly ValidationManager _validationManager;
+        public ConversationService(IConversationStore conversationStore, IMessageStore messageStore, IProfileStore profileStore)
         {
             _conversationStore = conversationStore;
             _messageStore = messageStore;
-            _validationManager = validationManager;
+            _validationManager = new ValidationManager(profileStore);
         }
         public async Task<StartConversationResponse> CreateConversation(StartConversationRequest request)
         {
