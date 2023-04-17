@@ -9,9 +9,11 @@ namespace ChatService.Web.Services
     public class ValidationManager
     {
         private readonly IProfileStore _profileStore;
-        public ValidationManager( IProfileStore profileStore)
+        private readonly IConversationStore _conversationStore;
+        public ValidationManager( IProfileStore profileStore, IConversationStore conversationStore)
         {
             _profileStore = profileStore;
+            _conversationStore = conversationStore;
         }
         public async Task ValidateConversation(StartConversationRequest request)
         {
@@ -29,7 +31,7 @@ namespace ChatService.Web.Services
                 await CheckIfSenderExists(request.Participants[0]);
                 await CheckIfReceiverExists(request.Participants[1]);
 
-                await ValidateMessage(request.FirstMessage, true);
+                await ValidateMessage(request.FirstMessage, true, request.Participants[0] +"_"+ request.Participants[1]);
             }catch (SenderDoesNotExist ex)
             {
                 throw ex;
@@ -53,7 +55,7 @@ namespace ChatService.Web.Services
             
 
         }
-        public async Task ValidateMessage(Message message, bool isFirstMessage)
+        public async Task ValidateMessage(Message message, bool isFirstMessage,string conversationId)
         {
             if (message == null)
             {
@@ -68,6 +70,7 @@ namespace ChatService.Web.Services
             if (!isFirstMessage)
             {
                 await CheckIfSenderExists(message.SenderUsername);
+                await CheckIfConversationExists(conversationId);
             }
             
         }
@@ -93,6 +96,18 @@ namespace ChatService.Web.Services
             if (recipient == null)
             {
                 throw new ReceiverDoesNotExist(receiverUsername);
+            }
+        }
+        public async Task CheckIfConversationExists(string conversationId)
+        {
+            if (string.IsNullOrEmpty(conversationId))
+            {
+                throw new NullConversation();
+            }
+            var conversation = await _conversationStore.GetConversation(conversationId);
+            if (conversation == null)
+            {
+                throw new ConversationDoesNotExist(conversationId);
             }
         }
     }

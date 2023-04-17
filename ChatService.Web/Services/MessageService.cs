@@ -14,7 +14,7 @@ namespace ChatService.Web.Services
         {
             _conversationStore = conversationStore;
             _messageStore = messageStore;
-            _validationManager = new ValidationManager(profileStore);
+            _validationManager = new ValidationManager(profileStore,conversationStore);
 
         }
         public async Task<UserMessage?> GetMessage(string messageId, string conversationId)
@@ -26,7 +26,7 @@ namespace ChatService.Web.Services
         {
             try
             {
-                await _validationManager.ValidateMessage(message, false);
+                await _validationManager.ValidateMessage(message, false,conversationId);
             }
             catch (NullMessage ex)
             {
@@ -36,11 +36,11 @@ namespace ChatService.Web.Services
             {
                 throw ex;
             }
-            catch(ParticipantsInvalidParams ex)
+            catch(SenderDoesNotExist ex)
             {
                 throw ex;
             }
-            catch(SenderDoesNotExist ex)
+            catch(ConversationDoesNotExist ex)
             {
                 throw ex;
             }

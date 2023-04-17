@@ -16,7 +16,7 @@ namespace ChatService.Web.Services
         {
             _conversationStore = conversationStore;
             _messageStore = messageStore;
-            _validationManager = new ValidationManager(profileStore);
+            _validationManager = new ValidationManager(profileStore, conversationStore);
         }
         public async Task<StartConversationResponse> CreateConversation(StartConversationRequest request)
         {
