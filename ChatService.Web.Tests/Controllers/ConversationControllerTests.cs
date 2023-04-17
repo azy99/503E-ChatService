@@ -18,6 +18,7 @@ using System.Collections.Specialized;
 using ChatService.Web.Dtos.Conversations;
 using ChatService.Web.Dtos.Messages;
 using ChatService.Web.Dtos.Profiles;
+using ChatService.Web.Exceptions;
 
 namespace ChatService.Web.Tests.Controllers
 {
@@ -76,11 +77,110 @@ namespace ChatService.Web.Tests.Controllers
             Assert.Equal(HttpStatusCode.Created, response.StatusCode);
             _conversationServiceMock.Verify(mock => mock.CreateConversation(It.IsAny<StartConversationRequest>()), Times.Once);
         }
+        [Fact]
+        public async Task AddConversation_NullStartConversationRequest()
+        {
+            var expectedResponse = new NullStartConversationRequestException();
+            var message = new Message("1", "fel", "faa");
+            StartConversationRequest request = null;
+            _conversationServiceMock.Setup(x => x.CreateConversation(request))
+                            .ThrowsAsync(expectedResponse);
 
-        //TODO test this in service layer level
+            var json = JsonConvert.SerializeObject(request);
+            var content = new StringContent(json, Encoding.Default, "application/json");
+            var response = await _httpClient.PostAsync("/Conversations", content);
 
-        //TODO Test for invalid arguments and conflict in service layer because logic is there? 
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+        [Fact]
+        public async Task AddConversation_ConversationNotTwoPeople()
+        {
+            var expectedResponse = new ConversationNotTwoPeople();
+            var message = new Message("1", "fel", "faa");
+            StartConversationRequest request = null;
+            _conversationServiceMock.Setup(x => x.CreateConversation(request))
+                            .ThrowsAsync(expectedResponse);
 
-        
+            var json = JsonConvert.SerializeObject(request);
+            var content = new StringContent(json, Encoding.Default, "application/json");
+            var response = await _httpClient.PostAsync("/Conversations", content);
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+        [Fact]
+        public async Task AddConversation_SenderDoesNotExist()
+        {
+            var expectedResponse = new SenderDoesNotExist("foo");
+            var message = new Message("1", "fel", "faa");
+            StartConversationRequest request = null;
+            _conversationServiceMock.Setup(x => x.CreateConversation(request))
+                            .ThrowsAsync(expectedResponse);
+
+            var json = JsonConvert.SerializeObject(request);
+            var content = new StringContent(json, Encoding.Default, "application/json");
+            var response = await _httpClient.PostAsync("/Conversations", content);
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+        [Fact]
+        public async Task AddConversation_ReceiverDoesNotExist()
+        {
+            var expectedResponse = new SenderDoesNotExist("foo");
+            var message = new Message("1", "fel", "faa");
+            StartConversationRequest request = null;
+            _conversationServiceMock.Setup(x => x.CreateConversation(request))
+                            .ThrowsAsync(expectedResponse);
+
+            var json = JsonConvert.SerializeObject(request);
+            var content = new StringContent(json, Encoding.Default, "application/json");
+            var response = await _httpClient.PostAsync("/Conversations", content);
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+        [Fact]
+        public async Task AddConversation_ParticipantsInvalidParams()
+        {
+            var expectedResponse = new ParticipantsInvalidParams();
+            var message = new Message("1", "fel", "faa");
+            StartConversationRequest request = null;
+            _conversationServiceMock.Setup(x => x.CreateConversation(request))
+                            .ThrowsAsync(expectedResponse);
+
+            var json = JsonConvert.SerializeObject(request);
+            var content = new StringContent(json, Encoding.Default, "application/json");
+            var response = await _httpClient.PostAsync("/Conversations", content);
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+        [Fact]
+        public async Task AddConversation_NullMessage()
+        {
+            var expectedResponse = new NullMessage();
+            var message = new Message("1", "fel", "faa");
+            StartConversationRequest request = null;
+            _conversationServiceMock.Setup(x => x.CreateConversation(request))
+                            .ThrowsAsync(expectedResponse);
+
+            var json = JsonConvert.SerializeObject(request);
+            var content = new StringContent(json, Encoding.Default, "application/json");
+            var response = await _httpClient.PostAsync("/Conversations", content);
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+        [Fact]
+        public async Task AddConversation_InvalidMessageParams()
+        {
+            var expectedResponse = new InvalidMessageParams();
+            var message = new Message("1", "fel", "faa");
+            StartConversationRequest request = null;
+            _conversationServiceMock.Setup(x => x.CreateConversation(request))
+                            .ThrowsAsync(expectedResponse);
+
+            var json = JsonConvert.SerializeObject(request);
+            var content = new StringContent(json, Encoding.Default, "application/json");
+            var response = await _httpClient.PostAsync("/Conversations", content);
+
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        }
     }
 }
