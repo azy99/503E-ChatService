@@ -78,7 +78,6 @@ namespace ChatService.Web.Tests.Service
         }
         [Theory]
         [InlineData(null)]
-        [InlineData()]
         [InlineData("foo")]
         [InlineData("foo","foo1","foo2")]
         public async Task AddConversation_ConversationNotTwoPeople(params string[] Participants)

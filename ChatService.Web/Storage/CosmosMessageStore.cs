@@ -1,4 +1,5 @@
-﻿using ChatService.Web.Dtos.Messages;
+﻿using ChatService.Web.Dtos.Conversations;
+using ChatService.Web.Dtos.Messages;
 using ChatService.Web.Dtos.Profiles;
 using ChatService.Web.Storage.Entities;
 using Microsoft.Azure.Cosmos;
@@ -15,13 +16,13 @@ namespace ChatService.Web.Storage
         {
             _cosmosClient = cosmosClient;
         }
-        private Container Container => _cosmosClient.GetDatabase("profiles").GetContainer("sharedContainer");
+        private Container Container => _cosmosClient.GetDatabase("profiles").GetContainer("messages");
         public async Task<SendMessageResponse> AddMessage(UserMessage message)
         {
             var messageEntity = ToEntity(message);
             try
             {
-                await Container.UpsertItemAsync(messageEntity);
+                await Container.CreateItemAsync(messageEntity);
             }
             catch (CosmosException e)
             {
@@ -52,11 +53,30 @@ namespace ChatService.Web.Storage
                 throw;
             }
         }
+        public async Task DeleteMessage(string messageID, string conversationID)
+        {
+            try
+            {
+                await Container.DeleteItemAsync<UserMessage>(
+                    id: messageID,
+                    partitionKey: new PartitionKey(conversationID)
+                );
+            }
+            catch (CosmosException e)
+            {
+                if (e.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return;
+                }
+
+                throw;
+            }
+        }
         private static MessageEntity ToEntity(UserMessage message)
         {
             return new MessageEntity(
                 partitionKey: message.ConversationId,
-                Id: message.Id,
+                id: message.Id,
                 Text: message.Text,
                 SenderUsername: message.SenderUsername,
                 UnixTime: message.UnixTime
@@ -66,7 +86,7 @@ namespace ChatService.Web.Storage
         {
             return new UserMessage(
                 ConversationId: messageEntity.partitionKey,
-                Id: messageEntity.Id,
+                Id: messageEntity.id,
                 Text:messageEntity.Text,
                 SenderUsername:messageEntity.SenderUsername,
                 UnixTime: messageEntity.UnixTime
@@ -76,6 +96,5 @@ namespace ChatService.Web.Storage
         {
             return new SendMessageResponse(messageEntity.UnixTime);
         }
-
     }
 }

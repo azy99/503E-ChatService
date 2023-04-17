@@ -18,7 +18,7 @@ namespace ChatService.Web.Storage
             _cosmosClient = new CosmosClient(options.Value.ConnectionString);
         }
 
-        private Container Container => _cosmosClient.GetDatabase("profiles").GetContainer("sharedContainer");
+        private Container Container => _cosmosClient.GetDatabase("profiles").GetContainer("conversations");
 
         public async Task<StartConversationResponse> AddConversation(UserConversation UserConversation)
         {
@@ -59,7 +59,6 @@ namespace ChatService.Web.Storage
                 throw e;
             }
         }
-        //TODO Implement   Update Conversation to change modified time
         public async Task UpsertConversation(UserConversation UserConversation)
         {
             try

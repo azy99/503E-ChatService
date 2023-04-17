@@ -43,6 +43,7 @@ namespace ChatService.Web.IntegrationTests
         {
             var response = await _conversationStore.AddConversation(_conversation);
             Assert.Equal(_conversation, await _conversationStore.GetConversation(_conversation.Id));
+            Assert.Equal(response, new StartConversationResponse( _conversation.Id,1 ));
         }
         [Fact]
         public async Task GetNonExistingConversation()
