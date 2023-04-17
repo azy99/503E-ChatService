@@ -44,10 +44,7 @@ namespace ChatService.Web.Tests.Service
         {
             var message = new Message("1", "fel", "faa");
             var UserConversationRequest = new UserConversation("foo1_foo2", DateTimeOffset.UtcNow.ToUnixTimeSeconds(), "foo1", "foo2");
-            //_conversationStorageMock.Setup(x => x.GetConversation("foo1_foo2")).ReturnsAsync(UserConversation);
-
             var result = await _conversationService.GetConversation("foo1_foo2");
-
 
             Assert.Null(result);
             _conversationStorageMock.Verify(mock => mock.GetConversation("foo1_foo2"), Times.Once);
