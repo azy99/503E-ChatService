@@ -31,7 +31,6 @@ namespace ChatService.Web.Storage
             {
                 if (e.StatusCode == HttpStatusCode.Conflict)
                 {
-                    //Should you return this or call get and return what you get?
                     var existingConversation =  await GetConversation(ConversationEntity.id);
                     return FromUserConversationToStartConversationResponse(existingConversation);
                 }
@@ -57,13 +56,20 @@ namespace ChatService.Web.Storage
                 {
                     return null;
                 }
-                throw;
+                throw e;
             }
         }
         //TODO Implement   Update Conversation to change modified time
-        public Task UpsertConversation(UserConversation UserConversation)
+        public async Task UpsertConversation(UserConversation UserConversation)
         {
-            throw new NotImplementedException();
+            try
+            {
+                await Container.UpsertItemAsync<ConversationEntity>(ToEntity(UserConversation));
+            }
+            catch(CosmosException e)
+            {
+                throw e;
+            }
         }
         public async Task DeleteConversation(string username, string conversationId)
         {

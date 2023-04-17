@@ -4,7 +4,7 @@ namespace ChatService.Web.Storage
 {
     public interface IMessageStore
     {
-        public Task<UserMessage> AddMessage(UserMessage message);
+        public Task<SendMessageResponse> AddMessage(UserMessage message);
         public Task<UserMessage?> GetMessage(string messageID, string conversationID);
     }
 }

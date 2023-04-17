@@ -16,7 +16,7 @@ namespace ChatService.Web.Storage
             _cosmosClient = cosmosClient;
         }
         private Container Container => _cosmosClient.GetDatabase("profiles").GetContainer("sharedContainer");
-        public async Task<UserMessage> AddMessage(UserMessage message)
+        public async Task<SendMessageResponse> AddMessage(UserMessage message)
         {
             var messageEntity = ToEntity(message);
             try
@@ -27,10 +27,11 @@ namespace ChatService.Web.Storage
             {
                 if (e.StatusCode == HttpStatusCode.Conflict)
                 {
-                    return await GetMessage(message.Id,message.ConversationId);
+                    var postedMessage = await GetMessage(message.Id,message.ConversationId);
+                    return ToSendMessageResponse(ToEntity(postedMessage));
                 }
             }
-            return ToUserMessage(messageEntity);
+            return ToSendMessageResponse(messageEntity);
         }
         public async Task<UserMessage?> GetMessage(string messageID,string conversationID)
         {
@@ -70,6 +71,10 @@ namespace ChatService.Web.Storage
                 SenderUsername:messageEntity.SenderUsername,
                 UnixTime: messageEntity.UnixTime
                 );
+        }
+        private static SendMessageResponse ToSendMessageResponse(MessageEntity messageEntity)
+        {
+            return new SendMessageResponse(messageEntity.UnixTime);
         }
 
     }
