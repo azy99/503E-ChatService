@@ -1,4 +1,5 @@
 ﻿using ChatService.Web.Dtos.Conversations;
+using ChatService.Web.Dtos.Messages;
 using ChatService.Web.Exceptions;
 using ChatService.Web.Services;
 using ChatService.Web.Storage;
@@ -12,9 +13,11 @@ namespace ChatService.Web.Controllers
     [Route("[controller]")]
     public class ConversationsController : ControllerBase { 
         private readonly IConversationService _conversationService;
-        public ConversationsController(IConversationService conversationService)
+        private readonly IMessageService _messageService;
+        public ConversationsController(IConversationService conversationService, IMessageService messageService)
         {
             _conversationService = conversationService;
+            _messageService = messageService;
         }
         [HttpGet("{conversationId}")]
         public async Task<ActionResult<UserConversation>> GetConversation(string conversationId)
@@ -65,22 +68,41 @@ namespace ChatService.Web.Controllers
             }
             
         }
-
-        //[HttpPut("conversationId")]{
-        //public async Task<ActionResult<userConversation>> UpdateProfile(string username, PutProfileRequest request)
-        //{
-        //    var existingProfile = await _profileService.GetProfile(username);
-        //    if (existingProfile == null)
-        //    {
-        //        return NotFound($"A User with username {username} was not found");
-        //    }
-
-        //    var profile = new Profile(username, request.firstName, request.lastName);
-        //    await _profileService.UpdateProfile(profile);
-
-        //    _logger.LogInformation("Updated Profile for {Username}", profile.Username);
-
-        //    return Ok(profile);
+        [HttpGet("{conversationId}/{messageId}")]
+        public async Task<ActionResult<UserConversation>> GetMessage(string conversationId, string messageId)
+        {
+            var conversation = await _messageService.GetMessage(messageId, conversationId);
+            if (conversation == null)
+            {
+                return NotFound($"A User with conversationID {conversationId} was not found");
+            }
+            return Ok(conversation);
+        }
+        [HttpPost("{conversationId}/messages")]
+        public async Task<ActionResult<SendMessageResponse>> AddMessageToConversation(string conversationId, Message message)
+        {
+            try
+            {
+                SendMessageResponse response = await _messageService.PostMessageToConversation(conversationId, message);
+                return CreatedAtAction(nameof(GetMessage), new { conversationId, messageId = message.Id }, response);
+            }
+            catch (ConversationDoesNotExist ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (SenderDoesNotExist ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (NullMessage ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (InvalidMessageParams ex)
+            {
+                return BadRequest(ex.Message);
+            }
+        }
     }
 
 }
