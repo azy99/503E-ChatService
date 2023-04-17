@@ -1,4 +1,5 @@
-﻿using ChatService.Web.Dtos.Conversations;
+﻿using Azure.Core;
+using ChatService.Web.Dtos.Conversations;
 using ChatService.Web.Dtos.Messages;
 using ChatService.Web.Dtos.Profiles;
 using ChatService.Web.Exceptions;
@@ -27,6 +28,30 @@ namespace ChatService.Web.Tests.Service
         public ConversationServiceTests()
         {
             _conversationService = new ConversationService(_conversationStorageMock.Object, _messageStorageMock.Object, _profileStorageMock.Object);
+        }
+        [Fact]
+        public async Task GetConversation()
+        {
+            var UserConversation = new UserConversation("foo1_foo2", DateTimeOffset.UtcNow.ToUnixTimeSeconds(), "foo1", "foo2");
+            _conversationStorageMock.Setup(x => x.GetConversation("foo1_foo2")).ReturnsAsync(UserConversation);
+
+            var result = await _conversationService.GetConversation("foo1_foo2");
+            Assert.Equal(UserConversation, result);
+            _conversationStorageMock.Verify(mock => mock.GetConversation("foo1_foo2"), Times.Once);
+        }
+        [Fact]
+        public async Task GetConversation_NotFound()
+        {
+            var message = new Message("1", "fel", "faa");
+            var UserConversationRequest = new UserConversation("foo1_foo2", DateTimeOffset.UtcNow.ToUnixTimeSeconds(), "foo1", "foo2");
+            //_conversationStorageMock.Setup(x => x.GetConversation("foo1_foo2")).ReturnsAsync(UserConversation);
+
+            var result = await _conversationService.GetConversation("foo1_foo2");
+
+
+            Assert.Null(result);
+            _conversationStorageMock.Verify(mock => mock.GetConversation("foo1_foo2"), Times.Once);
+            _conversationStorageMock.Verify(mock => mock.AddConversation(UserConversationRequest), Times.Never);
         }
         [Fact]
         public async Task AddConversation()
