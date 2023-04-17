@@ -70,10 +70,9 @@ public class CosmosProfileStore : IProfileStore
             {
                 return;
             }
-
             throw;
         }
-        //TODO delete associated image
+        //TODO delete associated messages
     }
     
     private static ProfileEntity ToEntity(Profile profile)

@@ -2,7 +2,7 @@
 {
     public record ConversationEntity(
         string partitionKey,        //Username
-        string Id,                  // ConversationId: SenderUsername_ReceiverUsername  split based on _ to retrieve sender, receiver
+        string id,                  // ConversationId: SenderUsername_ReceiverUsername  split based on _ to retrieve sender, receiver
         long LastModifiedUnixTime,
         string ReceiverUsername
         );

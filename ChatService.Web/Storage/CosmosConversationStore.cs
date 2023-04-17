@@ -1,5 +1,6 @@
 ﻿using ChatService.Web.Configuration;
 using ChatService.Web.Dtos.Conversations;
+using ChatService.Web.Dtos.Profiles;
 using ChatService.Web.Exceptions;
 using ChatService.Web.Storage.Entities;
 using Microsoft.Azure.Cosmos;
@@ -31,7 +32,7 @@ namespace ChatService.Web.Storage
                 if (e.StatusCode == HttpStatusCode.Conflict)
                 {
                     //Should you return this or call get and return what you get?
-                    var existingConversation =  await GetConversation(ConversationEntity.Id);
+                    var existingConversation =  await GetConversation(ConversationEntity.id);
                     return FromUserConversationToStartConversationResponse(existingConversation);
                 }
 
@@ -46,7 +47,7 @@ namespace ChatService.Web.Storage
             {
                 var entity = await Container.ReadItemAsync<ConversationEntity>(
                     id: conversationID,
-                    partitionKey: new PartitionKey(conversationID)
+                    partitionKey: new PartitionKey(conversationID.Split("_")[0])
                 );
                 return ToUserConversation(entity);
             }
@@ -64,12 +65,31 @@ namespace ChatService.Web.Storage
         {
             throw new NotImplementedException();
         }
+        public async Task DeleteConversation(string username, string conversationId)
+        {
+            try
+            {
+                await Container.DeleteItemAsync<UserConversation>(
+                    id: username,
+                    partitionKey: new PartitionKey(conversationId)
+                );
+            }
+            catch (CosmosException e)
+            {
+                if (e.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return;
+                }
+
+                throw;
+            }
+        }
 
         private static ConversationEntity ToEntity(UserConversation UserConversation)   
         {
             return new ConversationEntity(
                 partitionKey: UserConversation.Sender,
-                Id: UserConversation.Id,
+                id: UserConversation.Id,
                 LastModifiedUnixTime: UserConversation.LastModifiedUnixTime,
                 ReceiverUsername: UserConversation.Receiver
             );
@@ -77,7 +97,7 @@ namespace ChatService.Web.Storage
         private static UserConversation ToUserConversation(ConversationEntity entity)
         {
             return new UserConversation(
-                Id: entity.Id,
+                Id: entity.id,
                 LastModifiedUnixTime: entity.LastModifiedUnixTime,
                 Sender: entity.partitionKey,
                 Receiver: entity.ReceiverUsername
@@ -86,7 +106,7 @@ namespace ChatService.Web.Storage
         private static StartConversationResponse ToStartConversationResponse(ConversationEntity entity)
         {
             return new StartConversationResponse(
-                Id: entity.Id,
+                Id: entity.id,
                 CreatedUnixTime: entity.LastModifiedUnixTime
             );
         }

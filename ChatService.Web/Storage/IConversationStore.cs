@@ -7,5 +7,6 @@ namespace ChatService.Web.Storage
         Task UpsertConversation(UserConversation UserConversation);
         Task<UserConversation?> GetConversation(string conversationID);
         Task<StartConversationResponse> AddConversation(UserConversation UserConversation);
+        Task DeleteConversation(string username, string conversationId);
     }
 }
