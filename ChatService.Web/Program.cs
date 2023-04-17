@@ -23,6 +23,7 @@ builder.Services.AddSingleton<IProfileStore, CosmosProfileStore>();
 builder.Services.AddSingleton<IConversationStore, CosmosConversationStore>();
 builder.Services.AddSingleton<IMessageStore, CosmosMessageStore>();
 builder.Services.AddSingleton<IConversationService, ConversationService>();
+builder.Services.AddSingleton<IMessageService, MessageService>();
 builder.Services.AddSingleton(sp =>
 {
     var cosmosOptions = sp.GetRequiredService<IOptions<CosmosSettings>>();
