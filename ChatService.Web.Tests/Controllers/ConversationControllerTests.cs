@@ -72,32 +72,15 @@ namespace ChatService.Web.Tests.Controllers
 
             var response = await _httpClient.PostAsync("/Conversations", content);
 
-
             response.EnsureSuccessStatusCode();
             Assert.Equal(HttpStatusCode.Created, response.StatusCode);
             _conversationServiceMock.Verify(mock => mock.CreateConversation(It.IsAny<StartConversationRequest>()), Times.Once);
         }
 
         //TODO test this in service layer level
-        //[Fact]
-        //public async Task AddConversation_Conflict()
-        //{
-        //    var message = new Message("1", "fel", "faa");
-        //    var startConversationRequest = new StartConversationRequest(new string[] { "foo1", "foo2" }, message);
-        //    var conversationId = startConversationRequest.Participants[0] + "_" + startConversationRequest.Participants[1];
-        //    var userConversation = new UserConversation(conversationId, 123, "foo1", "foo2");
-        //    _conversationServiceMock.Setup(m => m.GetConversation(conversationId))
-        //        .ReturnsAsync(userConversation);
-
-        //    var response = await _httpClient.PostAsync("/Conversations",
-        //        new StringContent(JsonConvert.SerializeObject(startConversationRequest), Encoding.Default, "application/json"));
-        //    Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
-
-        //    //_conversationServiceMock.Verify(m => m.CreateConversation(startConversationRequest), Times.Never);
-        //}
 
         //TODO Test for invalid arguments and conflict in service layer because logic is there? 
 
-
+        
     }
 }
