@@ -7,7 +7,6 @@ using ChatService.Web.Storage;
 
 namespace ChatService.Web.Services
 {
-    //TODO Different DTOs between layers: controller -> service -> storage to add logic in service layer
     public class ConversationService : IConversationService
     {
         private readonly IConversationStore _conversationStore;
@@ -53,8 +52,6 @@ namespace ChatService.Web.Services
                 SenderUsername: request.FirstMessage.SenderUsername,
                 UnixTime : DateTimeOffset.UtcNow.ToUnixTimeSeconds()
                 );
-
-            //CAN GET RECIPIENT IN GET BY SPLITTING ID
             UserConversation conversation1 = new (
                 Id : request.Participants[0] + "_" + request.Participants[1],
                 LastModifiedUnixTime : DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
