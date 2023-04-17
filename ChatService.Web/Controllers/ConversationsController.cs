@@ -30,9 +30,40 @@ namespace ChatService.Web.Controllers
         [HttpPost]
         public async Task<ActionResult<StartConversationResponse>> AddConversation(StartConversationRequest request)
         {
-            StartConversationResponse response = await _conversationService.CreateConversation(request);
+            try {
+                StartConversationResponse response = await _conversationService.CreateConversation(request);
+                return CreatedAtAction(nameof(GetConversation), new { conversationId = response.Id }, response);
 
-           return CreatedAtAction(nameof(GetConversation), new { conversationId = response.Id}, response);
+            }
+            catch(NullStartConversationRequestException ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch(ConversationNotTwoPeople ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (SenderDoesNotExist ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (ReceiverDoesNotExist ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (ParticipantsInvalidParams ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (NullMessage ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            catch (InvalidMessageParams ex)
+            {
+                return BadRequest(ex.Message);
+            }
+            
         }
 
         //[HttpPut("conversationId")]{

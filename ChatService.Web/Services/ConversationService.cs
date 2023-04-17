@@ -21,7 +21,30 @@ namespace ChatService.Web.Services
         }
         public async Task<StartConversationResponse> CreateConversation(StartConversationRequest request)
         {
-            _validationManager.ValidateConversation(request);
+            try
+            {
+                await _validationManager.ValidateConversation(request);
+            }
+            catch (SenderDoesNotExist ex)
+            {
+                throw ex;
+            }
+            catch (ReceiverDoesNotExist ex)
+            {
+                throw ex;
+            }
+            catch (NullMessage ex)
+            {
+                throw ex;
+            }
+            catch (InvalidMessageParams ex)
+            {
+                throw ex;
+            }
+            catch(ParticipantsInvalidParams ex)
+            {
+                throw ex;
+            }
 
             UserMessage message = new (
                 ConversationId : request.Participants[0] + "_" + request.Participants[1],

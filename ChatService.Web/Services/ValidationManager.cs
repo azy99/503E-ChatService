@@ -13,24 +13,47 @@ namespace ChatService.Web.Services
         {
             _profileStore = profileStore;
         }
-        public void ValidateConversation(StartConversationRequest request)
+        public async Task ValidateConversation(StartConversationRequest request)
         {
             if (request == null)
             {
-                throw new NullStartConversationRequestException(nameof(request));
+                throw new NullStartConversationRequestException();
             }
 
-            if (request.Participants.Length< 2 || request.Participants.Length > 2 || request.Participants == null)
+            if (request.Participants == null || request.Participants.Length< 2 || request.Participants.Length > 2 )
             {
                 throw new ConversationNotTwoPeople();
             }
-            CheckIfSenderExists(request.Participants[0]);
-            CheckIfReceiverExists(request.Participants[1]);
+            try
+            {
+                await CheckIfSenderExists(request.Participants[0]);
+                await CheckIfReceiverExists(request.Participants[1]);
 
-            ValidateMessage(request.FirstMessage);
+                await ValidateMessage(request.FirstMessage, true);
+            }catch (SenderDoesNotExist ex)
+            {
+                throw ex;
+            }
+            catch(ReceiverDoesNotExist ex)
+            {
+                throw ex;
+            }
+            catch (ParticipantsInvalidParams ex)
+            {
+                throw ex;
+            }
+            catch (NullMessage ex)
+            {
+                throw ex;
+            }
+            catch (InvalidMessageParams ex)
+            {
+                throw ex;
+            }
+            
 
         }
-        public void ValidateMessage(Message message)
+        public async Task ValidateMessage(Message message, bool isFirstMessage)
         {
             if (message == null)
             {
@@ -42,20 +65,31 @@ namespace ChatService.Web.Services
             {
                 throw new InvalidMessageParams();
             }
-            CheckIfSenderExists(message.SenderUsername);
+            if (!isFirstMessage)
+            {
+                await CheckIfSenderExists(message.SenderUsername);
+            }
             
         }
-        public void CheckIfSenderExists(string senderUsername)
+        public async Task CheckIfSenderExists(string senderUsername)
         {
-            var sender = _profileStore.GetProfile(senderUsername);
+            if (string.IsNullOrEmpty(senderUsername))
+            {
+                throw new ParticipantsInvalidParams();
+            }
+            var sender = await _profileStore.GetProfile(senderUsername);
             if (sender == null)
             {
                 throw new SenderDoesNotExist(senderUsername);
             }
         }
-        public void CheckIfReceiverExists(string receiverUsername)
+        public async Task CheckIfReceiverExists(string receiverUsername)
         {
-            var recipient = _profileStore.GetProfile(receiverUsername);
+            if (string.IsNullOrEmpty(receiverUsername))
+            {
+                throw new ParticipantsInvalidParams();
+            }
+            var recipient = await _profileStore.GetProfile(receiverUsername);
             if (recipient == null)
             {
                 throw new ReceiverDoesNotExist(receiverUsername);
