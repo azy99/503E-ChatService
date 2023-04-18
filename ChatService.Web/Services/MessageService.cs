@@ -52,12 +52,11 @@ namespace ChatService.Web.Services
                 message.SenderUsername,
                 DateTimeOffset.UtcNow.ToUnixTimeSeconds()
                 );
-            var addMessageTask = _messageStore.AddMessage(userMessage);
-            await addMessageTask;
+            var response = await _messageStore.AddMessage(userMessage);
             var conversation = await _conversationStore.GetConversation(conversationId);
             var updatedConversation = CreateUpdatedConversation(conversation);
             await _conversationStore.UpsertConversation(updatedConversation);
-            return addMessageTask.Result;
+            return response;
         }
         public  UserConversation CreateUpdatedConversation(UserConversation conversation)
         {         
