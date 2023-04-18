@@ -4,8 +4,6 @@ using ChatService.Web.Exceptions;
 using ChatService.Web.Services;
 using ChatService.Web.Storage;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.VisualBasic;
-using Newtonsoft.Json;
 
 namespace ChatService.Web.Controllers
 {
@@ -14,10 +12,12 @@ namespace ChatService.Web.Controllers
     public class ConversationsController : ControllerBase { 
         private readonly IConversationService _conversationService;
         private readonly IMessageService _messageService;
-        public ConversationsController(IConversationService conversationService, IMessageService messageService)
+        private readonly IProfileStore _profileStore;
+        public ConversationsController(IConversationService conversationService, IMessageService messageService, IProfileStore profileStore)
         {
             _conversationService = conversationService;
             _messageService = messageService;
+            _profileStore = profileStore;
         }
         [HttpGet("{conversationId}")]
         public async Task<ActionResult<UserConversation>> GetConversation(string conversationId)
@@ -103,6 +103,23 @@ namespace ChatService.Web.Controllers
                 return BadRequest(ex.Message);
             }
         }
+
+
+        [HttpGet]
+        public async Task<ActionResult<EnumerateConversationsResponse>> EnumerateConversations(string username,
+            string? continuationToken, int? limit, long? lastSeenConversationTime)
+        {
+            var existingProfile = await _profileStore.GetProfile(username);
+            if (existingProfile == null)
+            {
+                return NotFound($"A User with username {username} was not found");
+            }
+
+            var response = await _conversationService.EnumerateConversations(username,continuationToken, limit, lastSeenConversationTime);
+
+            return Ok(response);
+        }
+        
     }
 
 }
