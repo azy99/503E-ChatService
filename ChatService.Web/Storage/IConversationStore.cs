@@ -10,5 +10,7 @@ namespace ChatService.Web.Storage
         Task DeleteConversation(string username, string conversationId);
         Task<EnumerateConversationsResponse> EnumerateConversations(string username,
             string? continuationToken, int? limit, long? lastSeenConversationTime);
+        Task<EnumerateConversationMessagesResponse> EnumerateConversationMessages(string conversationId,
+            string? continuationToken, int? limit, long? lastSeenMessageTime);
     }
 }
