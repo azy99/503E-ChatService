@@ -85,5 +85,12 @@ namespace ChatService.Web.Services
         {
             return _conversationStore.EnumerateConversations(username, continuationToken, limit, lastSeenConversationTime);
         }
+
+        public Task<EnumerateConversationMessagesResponse> EnumerateConversationMessages(string conversationId,
+            string? continuationToken, int? limit, long? lastSeenMessageTime)
+        {
+            return _conversationStore.EnumerateConversationMessages(conversationId, continuationToken, limit,
+                lastSeenMessageTime);
+        }
     }
 }
