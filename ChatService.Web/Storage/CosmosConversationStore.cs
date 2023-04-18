@@ -88,10 +88,19 @@ namespace ChatService.Web.Storage
                 conversations.Add(ToConversation(conv, profile));
             }
             var nextContinuationToken = conversationEntities.ContinuationToken;
-            var lastSeen = conversations[0].LastModifiedUnixTime;
-
-            var nextUri =
-                $"/api/conversations?username={username}&limit={limit}&lastSeenConversationTime={lastSeen}&continuationToken={nextContinuationToken}";
+            var nextUri = $"/api/conversations/?username={username}&";
+            
+            if (limit != null && limit != 0)
+            {
+                nextUri += $"limit={limit}&";
+            }
+    
+            if (conversations.Count > 0)
+            {
+                var lastSeen = conversations[0].LastModifiedUnixTime;
+                nextUri += $"lastSeenConversationTime={lastSeen}&continuationToken={nextContinuationToken}";
+            }
+            
             return new EnumerateConversationsResponse(conversations, nextUri);
         }
 
