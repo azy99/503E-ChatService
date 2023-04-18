@@ -1,31 +1,33 @@
 ﻿using ChatService.Web.Configuration;
 using ChatService.Web.Dtos.Conversations;
-using ChatService.Web.Dtos.Profiles;
-using ChatService.Web.Exceptions;
 using ChatService.Web.Storage.Entities;
 using Microsoft.Azure.Cosmos;
 using Microsoft.Extensions.Options;
 using System.Net;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+using ChatService.Web.Dtos.Messages;
+using ChatService.Web.Dtos.Profiles;
 
 namespace ChatService.Web.Storage
 {
     public class CosmosConversationStore : IConversationStore
     {
         private readonly CosmosClient _cosmosClient;
-        public CosmosConversationStore(IOptions<CosmosSettings> options)
+        private readonly IProfileStore _profileStore;
+        public CosmosConversationStore(IOptions<CosmosSettings> options, IProfileStore profileStore)
         {
             _cosmosClient = new CosmosClient(options.Value.ConnectionString);
+            _profileStore = profileStore;
         }
 
-        private Container Container => _cosmosClient.GetDatabase("profiles").GetContainer("conversations");
+        private Container ConversationsContainer => _cosmosClient.GetDatabase("profiles").GetContainer("conversations");
+        private Container MessagesContainer => _cosmosClient.GetDatabase("profiles").GetContainer("messages");
 
         public async Task<StartConversationResponse> AddConversation(UserConversation UserConversation)
         {
             var ConversationEntity = ToEntity(UserConversation);
             try
             {
-                await Container.CreateItemAsync(ConversationEntity);
+                await ConversationsContainer.CreateItemAsync(ConversationEntity);
             }
             catch (CosmosException e)
             {
@@ -44,7 +46,7 @@ namespace ChatService.Web.Storage
         {
             try
             {
-                var entity = await Container.ReadItemAsync<ConversationEntity>(
+                var entity = await ConversationsContainer.ReadItemAsync<ConversationEntity>(
                     id: conversationID,
                     partitionKey: new PartitionKey(conversationID.Split("_")[0])
                 );
@@ -59,11 +61,95 @@ namespace ChatService.Web.Storage
                 throw e;
             }
         }
+
+        public async Task<EnumerateConversationsResponse> EnumerateConversations(string username,
+            string? continuationToken, int? limit, long? lastSeenConversationTime)
+        {
+            var query = lastSeenConversationTime != null && string.IsNullOrEmpty(continuationToken)
+                ? new QueryDefinition(
+                    $"SELECT * FROM conversations WHERE conversations.LastModifiedUnixTime > {lastSeenConversationTime} ORDER BY conversations.LastModifiedUnixTime DESC")
+                : new QueryDefinition($"SELECT * FROM conversations ORDER BY conversations.LastModifiedUnixTime DESC");
+            var getConversations = ConversationsContainer.GetItemQueryIterator<ConversationEntity>(
+                query,
+                continuationToken: continuationToken,
+                requestOptions:new QueryRequestOptions()
+                {
+                    MaxItemCount = limit != null ? limit: -1,
+                    PartitionKey = new PartitionKey(username),
+                    ConsistencyLevel = ConsistencyLevel.Session
+                }
+            );
+            
+            var conversationEntities = await getConversations.ReadNextAsync();
+            var conversations = new List<Conversation>();
+            foreach (var conv in conversationEntities)
+            {
+                var profile = await _profileStore.GetProfile(conv.ReceiverUsername);
+                conversations.Add(ToConversation(conv, profile));
+            }
+            var nextContinuationToken = conversationEntities.ContinuationToken;
+            var nextUri = $"/api/conversations/?username={username}&";
+            
+            if (limit != null && limit != 0)
+            {
+                nextUri += $"limit={limit}&";
+            }
+    
+            if (conversations.Count > 0)
+            {
+                var lastSeen = conversations[0].LastModifiedUnixTime;
+                nextUri += $"lastSeenConversationTime={lastSeen}&continuationToken={nextContinuationToken}";
+            }
+            
+            return new EnumerateConversationsResponse(conversations, nextUri);
+        }
+
+        public async Task<EnumerateConversationMessagesResponse> EnumerateConversationMessages(string conversationId,
+            string? continuationToken, int? limit, long? lastSeenMessageTime)
+        {
+            var query = lastSeenMessageTime != null && string.IsNullOrEmpty(continuationToken)
+                ? new QueryDefinition(
+                    $"SELECT * FROM messages WHERE messages.UnixTime > {lastSeenMessageTime} ORDER BY messages.UnixTime DESC")
+                : new QueryDefinition($"SELECT * FROM messages ORDER BY messages.UnixTime DESC");
+            var getMessages = MessagesContainer.GetItemQueryIterator<MessageEntity>(
+                query,
+                continuationToken: continuationToken,
+                requestOptions:new QueryRequestOptions()
+                {
+                    MaxItemCount = limit != null ? limit: -1,
+                    PartitionKey = new PartitionKey(conversationId),
+                    ConsistencyLevel = ConsistencyLevel.Session
+                }
+            );
+            var messageEntities = await getMessages.ReadNextAsync();
+            var messages = new List<ConversationMessage>();
+            foreach (var m in messageEntities)
+            {
+                messages.Add(ToConversationMessage(m));
+            }
+            var nextContinuationToken = messageEntities.ContinuationToken;
+            var nextUri = $"/api/conversations/{conversationId}/messages/?";
+            
+            if (limit != null && limit != 0)
+            {
+                nextUri += $"limit={limit}&";
+            }
+            
+            if (messages.Count > 0)
+            {
+                var lastSeen = messages[0].UnixTime;
+                nextUri += $"lastSeenMessageTime={lastSeen}&continuationToken={nextContinuationToken}";
+            }
+
+            return new EnumerateConversationMessagesResponse(messages, nextUri);
+        }
+        
+        //TODO Implement   Update Conversation to change modified time
         public async Task UpsertConversation(UserConversation UserConversation)
         {
             try
             {
-                await Container.UpsertItemAsync<ConversationEntity>(ToEntity(UserConversation));
+                await ConversationsContainer.UpsertItemAsync<ConversationEntity>(ToEntity(UserConversation));
             }
             catch(CosmosException e)
             {
@@ -74,7 +160,7 @@ namespace ChatService.Web.Storage
         {
             try
             {
-                await Container.DeleteItemAsync<UserConversation>(
+                await ConversationsContainer.DeleteItemAsync<UserConversation>(
                     id: username,
                     partitionKey: new PartitionKey(conversationId)
                 );
@@ -121,6 +207,24 @@ namespace ChatService.Web.Storage
                 Id: UserConversation.Id,
                 CreatedUnixTime: UserConversation.LastModifiedUnixTime
                 );
+        }
+
+        private static Conversation ToConversation(ConversationEntity entity, Profile profile)
+        {
+            return new Conversation(
+                Id: entity.id,
+                LastModifiedUnixTime: entity.LastModifiedUnixTime,
+                Recipient: profile
+            );
+        }
+
+        private static ConversationMessage ToConversationMessage(MessageEntity entity)
+        {
+            return new ConversationMessage(
+                Text: entity.Text,
+                SenderUsername: entity.SenderUsername,
+                UnixTime: entity.UnixTime
+            );
         }
     }
 }

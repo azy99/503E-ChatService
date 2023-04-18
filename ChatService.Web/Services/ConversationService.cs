@@ -4,6 +4,7 @@ using ChatService.Web.Dtos.Messages;
 using ChatService.Web.Dtos.Profiles;
 using ChatService.Web.Exceptions;
 using ChatService.Web.Storage;
+using Microsoft.Azure.Cosmos.Serialization.HybridRow;
 
 namespace ChatService.Web.Services
 {
@@ -77,6 +78,19 @@ namespace ChatService.Web.Services
         public Task<UserConversation?> GetConversation(string conversationID)
         {
             return _conversationStore.GetConversation(conversationID);
+        }
+
+        public Task<EnumerateConversationsResponse> EnumerateConversations(string username,
+            string? continuationToken, int? limit, long? lastSeenConversationTime)
+        {
+            return _conversationStore.EnumerateConversations(username, continuationToken, limit, lastSeenConversationTime);
+        }
+
+        public Task<EnumerateConversationMessagesResponse> EnumerateConversationMessages(string conversationId,
+            string? continuationToken, int? limit, long? lastSeenMessageTime)
+        {
+            return _conversationStore.EnumerateConversationMessages(conversationId, continuationToken, limit,
+                lastSeenMessageTime);
         }
     }
 }

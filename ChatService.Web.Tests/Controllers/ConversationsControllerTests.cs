@@ -21,6 +21,7 @@ namespace ChatService.Web.Tests.Controllers
     {
         private readonly Mock<IMessageService> _messageServiceMock = new();
         private readonly Mock<IConversationService> _conversationServiceMock = new();
+        private readonly Mock<IProfileStore> _profileStoreMock = new();
         private readonly HttpClient _httpClient;
 
         public ConversationsControllerTests(WebApplicationFactory<Program> factory)
@@ -29,6 +30,7 @@ namespace ChatService.Web.Tests.Controllers
             {
                 builder.ConfigureTestServices(services => { services.AddSingleton(_conversationServiceMock.Object); });
                 builder.ConfigureTestServices(services => { services.AddSingleton(_messageServiceMock.Object); });
+                builder.ConfigureTestServices(services => { services.AddSingleton(_profileStoreMock.Object); });
             }).CreateClient();
         }
         [Fact]
@@ -306,6 +308,56 @@ namespace ChatService.Web.Tests.Controllers
             var response = await _httpClient.PostAsync($"/Conversations/{conversationId}/messages", content);
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task EnumerateConversations()
+        {
+            var recipient = new Profile("foobar", "Foo", "Bar","5b0fa492-3271-4131-bb6b-519c263d6c7b");
+            var conversation = new Conversation(Id: "abcdef", LastModifiedUnixTime: 2, Recipient: recipient);
+            var expectedResponse = new EnumerateConversationsResponse(Conversations:new List<Conversation>{conversation}, NextUri: "/api/conversations/?username=foobar&");
+            _profileStoreMock.Setup(m => m.GetProfile("foo")).ReturnsAsync(recipient);
+            _conversationServiceMock.Setup(m => m.EnumerateConversations("foo",null,null,null)).ReturnsAsync(expectedResponse);
+            var response =
+                await _httpClient.GetAsync($"/Conversations?username=foo");
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task EnumerateConversations_UserNotFound()
+        {
+            var recipient = new Profile("foobar", "Foo", "Bar","5b0fa492-3271-4131-bb6b-519c263d6c7b");
+            var conversation = new Conversation(Id: "abcdef", LastModifiedUnixTime: 2, Recipient: recipient);
+            var expectedResponse = new EnumerateConversationsResponse(Conversations:new List<Conversation>{conversation}, NextUri: "/api/conversations/?username=foobar&");
+            _conversationServiceMock.Setup(m => m.EnumerateConversations("foo",null,null,null)).ReturnsAsync(expectedResponse);
+            var response = await _httpClient.GetAsync($"/Conversations?username=foo");
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task EnumerateConversationMessages()
+        {
+            var message = new ConversationMessage(Text: "hello", SenderUsername: "foo", UnixTime: 1);
+            var expectedResponse = new EnumerateConversationMessagesResponse(
+                Messages: new List<ConversationMessage> { message }, NextUri: "/api/conversations/foo_bar/messages?");
+            var conversation = new UserConversation("foo_bar", 123,"foo","bar");
+            _conversationServiceMock.Setup(m => m.GetConversation("foo_bar")).ReturnsAsync(conversation);
+            _conversationServiceMock.Setup(m => m.EnumerateConversationMessages("foo_bar", null, null, null))
+                .ReturnsAsync(expectedResponse);
+            var response = await _httpClient.GetAsync($"/Conversations/foo_bar/messages");
+            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        }
+
+        [Fact]
+        public async Task EnumerateConversationMessages_ConversationNotFound()
+        {
+            var message = new ConversationMessage(Text: "hello", SenderUsername: "foo", UnixTime: 1);
+            var expectedResponse = new EnumerateConversationMessagesResponse(
+                Messages: new List<ConversationMessage> { message }, NextUri: "/api/conversations/foo_bar/messages?");
+            _conversationServiceMock.Setup(m => m.EnumerateConversationMessages("foo_bar", null, null, null))
+                .ReturnsAsync(expectedResponse);
+            var response = await _httpClient.GetAsync($"/Conversations/foo_bar/messages");
+            Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         }
     }
 }

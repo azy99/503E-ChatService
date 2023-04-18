@@ -1,5 +1,4 @@
 ﻿using ChatService.Web.Dtos.Conversations;
-using ChatService.Web.Dtos.Messages;
 
 namespace ChatService.Web.Services
 {
@@ -7,6 +6,10 @@ namespace ChatService.Web.Services
     {
         Task <StartConversationResponse> CreateConversation(StartConversationRequest request);
         Task<UserConversation?> GetConversation(string conversationID);
+        Task<EnumerateConversationsResponse> EnumerateConversations(string username,
+            string? continuationToken, int? limit, long? lastSeenConversationTime);
 
+        Task<EnumerateConversationMessagesResponse> EnumerateConversationMessages(string conversationId, string? continuationToken, int? limit,
+            long? lastSeenMessageTime);
     }
 }
