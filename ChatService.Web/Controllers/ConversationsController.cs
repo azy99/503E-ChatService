@@ -38,10 +38,10 @@ namespace ChatService.Web.Controllers
                 return CreatedAtAction(nameof(GetConversation), new { conversationId = response.Id }, response);
 
             }
-            catch(NullStartConversationRequestException ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            //catch(NullStartConversationRequestException ex)
+            //{
+            //    return BadRequest(ex.Message);
+            //}
             catch(ConversationNotTwoPeople ex)
             {
                 return BadRequest(ex.Message);
@@ -58,10 +58,10 @@ namespace ChatService.Web.Controllers
             {
                 return BadRequest(ex.Message);
             }
-            catch (NullMessage ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            //catch (NullMessage ex)
+            //{
+            //    return BadRequest(ex.Message);
+            //}
             catch (InvalidMessageParams ex)
             {
                 return BadRequest(ex.Message);
@@ -94,10 +94,10 @@ namespace ChatService.Web.Controllers
             {
                 return BadRequest(ex.Message);
             }
-            catch (NullMessage ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            //catch (NullMessage ex)
+            //{
+            //    return BadRequest(ex.Message);
+            //}
             catch (InvalidMessageParams ex)
             {
                 return BadRequest(ex.Message);
