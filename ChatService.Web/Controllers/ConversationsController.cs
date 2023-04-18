@@ -3,6 +3,7 @@ using ChatService.Web.Dtos.Messages;
 using ChatService.Web.Exceptions;
 using ChatService.Web.Services;
 using ChatService.Web.Storage;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ChatService.Web.Controllers
@@ -119,7 +120,23 @@ namespace ChatService.Web.Controllers
 
             return Ok(response);
         }
-        
+
+        [HttpGet("{conversationId}/messages")]
+        public async Task<ActionResult<EnumerateConversationMessagesResponse>> EnumerateConversationMessages(string conversationId, string? continuationToken, int? limit,
+            long? lastSeenMessageTime)
+        {
+            var conv = await _conversationService.GetConversation(conversationId);
+            if (conv == null)
+            {
+                return NotFound($"A Conversation with id {conversationId} was not found");
+            }
+
+            var response = await _conversationService.EnumerateConversationMessages(conversationId, continuationToken,
+                limit, lastSeenMessageTime);
+            return Ok(response);
+
+        }
+
     }
 
 }
