@@ -1,3 +1,3 @@
-namespace ChatService.Web.Dtos;
+namespace ChatService.Web.Dtos.Profiles;
 
 public record UploadImageResponse(string ImageId);

@@ -1,4 +1,4 @@
-namespace ChatService.Web.Dtos;
+namespace ChatService.Web.Dtos.Profiles;
 
 public record BlobResponse(
     string ImageId,

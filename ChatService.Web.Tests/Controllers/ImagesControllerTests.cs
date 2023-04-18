@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
-using ChatService.Web.Dtos;
 using ChatService.Web.Storage;
+using ChatService.Web.Dtos.Profiles;
 
 namespace ChatService.Web.Tests.Controllers;
 

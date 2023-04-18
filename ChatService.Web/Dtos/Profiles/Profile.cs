@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace ChatService.Web.Dtos;
+namespace ChatService.Web.Dtos.Profiles;
 
 public record Profile(
     [Required] string Username,

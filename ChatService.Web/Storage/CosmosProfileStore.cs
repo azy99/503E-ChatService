@@ -1,5 +1,5 @@
 using System.Net;
-using ChatService.Web.Dtos;
+using ChatService.Web.Dtos.Profiles;
 using ChatService.Web.Storage.Entities;
 using Microsoft.Azure.Cosmos;
 
@@ -14,7 +14,7 @@ public class CosmosProfileStore : IProfileStore
         _cosmosClient = cosmosClient;
     }
 
-    private Container Container => _cosmosClient.GetDatabase("profiles").GetContainer("sharedContainer");
+    private Container Container => _cosmosClient.GetDatabase("profiles").GetContainer("profiles");
 
     public async Task UpsertProfile(Profile profile)
     {
@@ -70,10 +70,9 @@ public class CosmosProfileStore : IProfileStore
             {
                 return;
             }
-
             throw;
         }
-        //TODO delete associated image
+        //TODO delete associated messages
     }
     
     private static ProfileEntity ToEntity(Profile profile)
