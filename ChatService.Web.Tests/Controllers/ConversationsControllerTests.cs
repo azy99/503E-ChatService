@@ -82,7 +82,6 @@ namespace ChatService.Web.Tests.Controllers
             StartConversationRequest request = null;
             _conversationServiceMock.Setup(x => x.CreateConversation(request))
                             .ThrowsAsync(expectedResponse);
-
             var json = JsonConvert.SerializeObject(request);
             var content = new StringContent(json, Encoding.Default, "application/json");
             var response = await _httpClient.PostAsync("/Conversations", content);
@@ -94,68 +93,80 @@ namespace ChatService.Web.Tests.Controllers
         {
             var expectedResponse = new ConversationNotTwoPeople();
             var message = new Message("1", "fel", "faa");
-            StartConversationRequest request = null;
-            _conversationServiceMock.Setup(x => x.CreateConversation(request))
+            StartConversationRequest request = new StartConversationRequest(new string[] { "foo" },message);
+            _conversationServiceMock.Setup(x => x.CreateConversation(It.IsAny<StartConversationRequest>()))
                             .ThrowsAsync(expectedResponse);
 
             var json = JsonConvert.SerializeObject(request);
             var content = new StringContent(json, Encoding.Default, "application/json");
             var response = await _httpClient.PostAsync("/Conversations", content);
-
+            
+            _conversationServiceMock.Verify(mock => mock.CreateConversation(It.IsAny<StartConversationRequest>()), Times.Once);
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            Assert.Contains(expectedResponse.Message, responseContent);
         }
         [Fact]
         public async Task AddConversation_SenderDoesNotExist()
         {
             var expectedResponse = new SenderDoesNotExist("foo");
-            var message = new Message("1", "fel", "faa");
-            StartConversationRequest request = null;
-            _conversationServiceMock.Setup(x => x.CreateConversation(request))
+            var message = new Message("1", "foo", "faa");
+            StartConversationRequest request = new StartConversationRequest(new string[] { "foo","fa" }, message);
+            _conversationServiceMock.Setup(x => x.CreateConversation(It.IsAny<StartConversationRequest>()))
                             .ThrowsAsync(expectedResponse);
 
             var json = JsonConvert.SerializeObject(request);
             var content = new StringContent(json, Encoding.Default, "application/json");
             var response = await _httpClient.PostAsync("/Conversations", content);
 
+            _conversationServiceMock.Verify(mock => mock.CreateConversation(It.IsAny<StartConversationRequest>()), Times.Once);
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            Assert.Contains(expectedResponse.Message, responseContent);
         }
         [Fact]
         public async Task AddConversation_ReceiverDoesNotExist()
         {
-            var expectedResponse = new SenderDoesNotExist("foo");
-            var message = new Message("1", "fel", "faa");
-            StartConversationRequest request = null;
-            _conversationServiceMock.Setup(x => x.CreateConversation(request))
+            var expectedResponse = new ReceiverDoesNotExist("fa");
+            var message = new Message("1", "foo", "faa");
+            StartConversationRequest request = new StartConversationRequest(new string[] { "foo", "fa" }, message);
+            _conversationServiceMock.Setup(x => x.CreateConversation(It.IsAny<StartConversationRequest>()))
                             .ThrowsAsync(expectedResponse);
 
             var json = JsonConvert.SerializeObject(request);
             var content = new StringContent(json, Encoding.Default, "application/json");
             var response = await _httpClient.PostAsync("/Conversations", content);
 
+            _conversationServiceMock.Verify(mock => mock.CreateConversation(It.IsAny<StartConversationRequest>()), Times.Once);
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            Assert.Contains(expectedResponse.Message, responseContent);
         }
         [Fact]
         public async Task AddConversation_ParticipantsInvalidParams()
         {
             var expectedResponse = new ParticipantsInvalidParams();
-            var message = new Message("1", "fel", "faa");
-            StartConversationRequest request = null;
-            _conversationServiceMock.Setup(x => x.CreateConversation(request))
+            var message = new Message("1", "foo", "faa");
+            StartConversationRequest request = new StartConversationRequest(new string[] { "", "fa" }, message);
+            _conversationServiceMock.Setup(x => x.CreateConversation(It.IsAny<StartConversationRequest>()))
                             .ThrowsAsync(expectedResponse);
 
             var json = JsonConvert.SerializeObject(request);
             var content = new StringContent(json, Encoding.Default, "application/json");
             var response = await _httpClient.PostAsync("/Conversations", content);
 
+            _conversationServiceMock.Verify(mock => mock.CreateConversation(It.IsAny<StartConversationRequest>()), Times.Once);
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            Assert.Contains(expectedResponse.Message, responseContent);
         }
         [Fact]
         public async Task AddConversation_NullMessage()
         {
             var expectedResponse = new NullMessage();
-            var message = new Message("1", "fel", "faa");
-            StartConversationRequest request = null;
-            _conversationServiceMock.Setup(x => x.CreateConversation(request))
+            Message message = null;
+            StartConversationRequest request = new StartConversationRequest(new string[] { "foo", "fa" }, message);
+            _conversationServiceMock.Setup(x => x.CreateConversation(It.IsAny<StartConversationRequest>()))
                             .ThrowsAsync(expectedResponse);
 
             var json = JsonConvert.SerializeObject(request);
@@ -169,15 +180,18 @@ namespace ChatService.Web.Tests.Controllers
         {
             var expectedResponse = new InvalidMessageParams();
             var message = new Message("1", "fel", "faa");
-            StartConversationRequest request = null;
-            _conversationServiceMock.Setup(x => x.CreateConversation(request))
+            StartConversationRequest request = new StartConversationRequest(new string[] { "1"},message);
+            _conversationServiceMock.Setup(x => x.CreateConversation(It.IsAny<StartConversationRequest>()))
                             .ThrowsAsync(expectedResponse);
 
             var json = JsonConvert.SerializeObject(request);
             var content = new StringContent(json, Encoding.Default, "application/json");
             var response = await _httpClient.PostAsync("/Conversations", content);
 
+            _conversationServiceMock.Verify(mock => mock.CreateConversation(It.IsAny<StartConversationRequest>()), Times.Once);
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            Assert.Contains(expectedResponse.Message, responseContent);
         }
         [Fact]
         public async Task GetMessage()
@@ -230,6 +244,8 @@ namespace ChatService.Web.Tests.Controllers
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
             _messageServiceMock.Verify(mock => mock.PostMessageToConversation(conversationId, message), Times.Once);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            Assert.Contains(expectedResponse.Message, responseContent);
         }
         [Fact]
         public async Task AddMessage_SenderDoesNotExist()
@@ -245,6 +261,8 @@ namespace ChatService.Web.Tests.Controllers
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
             _messageServiceMock.Verify(mock => mock.PostMessageToConversation(conversationId, message), Times.Once);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            Assert.Contains(expectedResponse.Message, responseContent);
         }
         [Fact]
         public async Task AddMessage_NullMessage()
@@ -259,14 +277,13 @@ namespace ChatService.Web.Tests.Controllers
             var response = await _httpClient.PostAsync($"/Conversations/{conversationId}/messages", content);
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-            _messageServiceMock.Verify(mock => mock.PostMessageToConversation(conversationId, message), Times.Never);
         }
         [Fact]
         public async Task AddMessage_InvalidMessageParams()
         {
             var conversationId = "foo1_foo2";
             var expectedResponse = new InvalidMessageParams();
-            Message message = new Message("", "", "");
+            Message message = new Message("1", "1", "1");
             _messageServiceMock.Setup(x => x.PostMessageToConversation(conversationId, message))
                             .ThrowsAsync(expectedResponse);
             var json = JsonConvert.SerializeObject(message);
@@ -274,8 +291,23 @@ namespace ChatService.Web.Tests.Controllers
             var response = await _httpClient.PostAsync($"/Conversations/{conversationId}/messages", content);
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-            _messageServiceMock.Verify(mock => mock.PostMessageToConversation(conversationId, message), Times.Never);
+            _messageServiceMock.Verify(mock => mock.PostMessageToConversation(conversationId, message), Times.Once);
+            var responseContent = await response.Content.ReadAsStringAsync();
+            Assert.Contains(expectedResponse.Message, responseContent);
+        }
+        [Fact]
+        public async Task AddMessage_NullConversation()
+        {
+            var conversationId = " ";
+            var expectedResponse = new NullConversation();
+            Message message = new Message("1", "1", "1");
+            _messageServiceMock.Setup(x => x.PostMessageToConversation(conversationId, message))
+                            .ThrowsAsync(expectedResponse);
+            var json = JsonConvert.SerializeObject(message);
+            var content = new StringContent(json, Encoding.Default, "application/json");
+            var response = await _httpClient.PostAsync($"/Conversations/{conversationId}/messages", content);
 
+            Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
 
         [Fact]
