@@ -25,9 +25,11 @@ namespace ChatService.Web.Tests.Service
         private readonly Mock<IMessageStore> _messageStorageMock = new();
         private readonly Mock<IProfileStore> _profileStorageMock = new();
         private readonly ConversationService _conversationService;
+        private readonly ValidationManager _validationManager;
         public ConversationServiceTests()
         {
-            _conversationService = new ConversationService(_conversationStorageMock.Object, _messageStorageMock.Object, _profileStorageMock.Object);
+            _validationManager = new ValidationManager(_profileStorageMock.Object, _conversationStorageMock.Object);
+            _conversationService = new ConversationService(_conversationStorageMock.Object, _messageStorageMock.Object, _profileStorageMock.Object, _validationManager);
         }
         [Fact]
         public async Task GetConversation()

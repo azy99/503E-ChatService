@@ -31,7 +31,7 @@ namespace ChatService.Web.IntegrationTests
             _messageStore = factory.Services.GetRequiredService<IMessageStore>();
             _message = new(
             ConversationId: _guid + "_" + Guid.NewGuid().ToString(),
-            Id: "1",
+            Id: Guid.NewGuid().ToString(),
             Text: "Foo",
             SenderUsername: _guid,
             UnixTime: 1
@@ -45,9 +45,22 @@ namespace ChatService.Web.IntegrationTests
             Assert.Equal(response, new SendMessageResponse(1));
         }
         [Fact]
+        public async Task AddExistingMessage()
+        {
+            await _messageStore.AddMessage(_message);
+            var response = await _messageStore.AddMessage(_message);
+            Assert.Equal(_message, await _messageStore.GetMessage(_message.Id, _message.ConversationId));
+            Assert.Equal(response, new SendMessageResponse(1));
+        }
+        [Fact]
         public async Task GetNonExistingMessage()
         {
             Assert.Null(await _messageStore.GetMessage(_message.Id, _message.ConversationId));
+        }
+        [Fact]
+        public async Task DeleteMessageNotFound()
+        {
+            await _messageStore.DeleteMessage(_message.Id, _message.ConversationId);
         }
     }
 }
