@@ -143,8 +143,6 @@ namespace ChatService.Web.Storage
 
             return new EnumerateConversationMessagesResponse(messages, nextUri);
         }
-        
-        //TODO Implement   Update Conversation to change modified time
         public async Task UpsertConversation(UserConversation UserConversation)
         {
             try

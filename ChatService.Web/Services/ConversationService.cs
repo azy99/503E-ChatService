@@ -12,12 +12,12 @@ namespace ChatService.Web.Services
     {
         private readonly IConversationStore _conversationStore;
         private readonly IMessageStore _messageStore;
-        private readonly ValidationManager _validationManager;
-        public ConversationService(IConversationStore conversationStore, IMessageStore messageStore, IProfileStore profileStore)
+        private readonly IValidationManager _validationManager;
+        public ConversationService(IConversationStore conversationStore, IMessageStore messageStore, IProfileStore profileStore,IValidationManager validationManager)
         {
             _conversationStore = conversationStore;
             _messageStore = messageStore;
-            _validationManager = new ValidationManager(profileStore, conversationStore);
+            _validationManager = validationManager;
         }
         public async Task<StartConversationResponse> CreateConversation(StartConversationRequest request)
         {
@@ -46,29 +46,31 @@ namespace ChatService.Web.Services
                 throw ex;
             }
 
-            UserMessage message = new (
-                ConversationId : request.Participants[0] + "_" + request.Participants[1],
-                Id: request.FirstMessage.Id,
-                Text: request.FirstMessage.Text,
-                SenderUsername: request.FirstMessage.SenderUsername,
-                UnixTime : DateTimeOffset.UtcNow.ToUnixTimeSeconds()
-                );
-            UserConversation conversation1 = new (
-                Id : request.Participants[0] + "_" + request.Participants[1],
-                LastModifiedUnixTime : DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                Sender: request.Participants[0],
-                Receiver: request.Participants[1]
-                );
-            UserConversation conversation2 = new(
-                Id: request.Participants[1] + "_" + request.Participants[0],
-                LastModifiedUnixTime: DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-                Sender: request.Participants[1],
-                Receiver: request.Participants[0]
-                );
+            //UserMessage message = new (
+            //    ConversationId : request.Participants[0] + "_" + request.Participants[1],
+            //    Id: request.FirstMessage.Id,
+            //    Text: request.FirstMessage.Text,
+            //    SenderUsername: request.FirstMessage.SenderUsername,
+            //    UnixTime : DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+            //    );
+            UserMessage message = createUserMessageForConversationStart(request);
+            (UserConversation, UserConversation) conversations = createConversationUserConversations(request);
+            //UserConversation conversation1 = new (
+            //    Id : request.Participants[0] + "_" + request.Participants[1],
+            //    LastModifiedUnixTime : DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+            //    Sender: request.Participants[0],
+            //    Receiver: request.Participants[1]
+            //    );
+            //UserConversation conversation2 = new(
+            //    Id: request.Participants[1] + "_" + request.Participants[0],
+            //    LastModifiedUnixTime: DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+            //    Sender: request.Participants[1],
+            //    Receiver: request.Participants[0]
+            //    );
 
             var addMessageTask = _messageStore.AddMessage(message);
-            var addConversation1Task = _conversationStore.AddConversation(conversation1);
-            var addConversation2Task = _conversationStore.AddConversation(conversation2);
+            var addConversation1Task = _conversationStore.AddConversation(conversations.Item1);
+            var addConversation2Task = _conversationStore.AddConversation(conversations.Item2);
 
             await Task.WhenAll( addMessageTask, addConversation1Task, addConversation2Task );
 
@@ -91,6 +93,33 @@ namespace ChatService.Web.Services
         {
             return _conversationStore.EnumerateConversationMessages(conversationId, continuationToken, limit,
                 lastSeenMessageTime);
+        }
+        public (UserConversation,UserConversation) createConversationUserConversations(StartConversationRequest request)
+        {
+            UserConversation conversation1 = new(
+                Id: request.Participants[0] + "_" + request.Participants[1],
+                LastModifiedUnixTime: DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                Sender: request.Participants[0],
+                Receiver: request.Participants[1]
+                );
+            UserConversation conversation2 = new(
+                Id: request.Participants[1] + "_" + request.Participants[0],
+                LastModifiedUnixTime: DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                Sender: request.Participants[1],
+                Receiver: request.Participants[0]
+                );
+            return (conversation1, conversation2);
+        }
+        public UserMessage createUserMessageForConversationStart(StartConversationRequest request)
+        {
+            UserMessage message = new(
+                ConversationId: request.Participants[0] + "_" + request.Participants[1],
+                Id: request.FirstMessage.Id,
+                Text: request.FirstMessage.Text,
+                SenderUsername: request.FirstMessage.SenderUsername,
+                UnixTime: DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+                );
+            return message;
         }
     }
 }

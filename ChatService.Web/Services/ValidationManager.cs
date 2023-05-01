@@ -6,7 +6,7 @@ using ChatService.Web.Storage;
 
 namespace ChatService.Web.Services
 {
-    public class ValidationManager
+    public class ValidationManager: IValidationManager
     {
         private readonly IProfileStore _profileStore;
         private readonly IConversationStore _conversationStore;

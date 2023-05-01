@@ -9,13 +9,12 @@ namespace ChatService.Web.Services
     {
         private readonly IConversationStore _conversationStore;
         private readonly IMessageStore _messageStore;
-        private readonly ValidationManager _validationManager;
-        public MessageService(IConversationStore conversationStore, IMessageStore messageStore, IProfileStore profileStore)
+        private readonly IValidationManager _validationManager;
+        public MessageService(IConversationStore conversationStore, IMessageStore messageStore, IProfileStore profileStore, IValidationManager validationManager)
         {
             _conversationStore = conversationStore;
             _messageStore = messageStore;
-            _validationManager = new ValidationManager(profileStore,conversationStore);
-
+            _validationManager = validationManager;
         }
         public async Task<UserMessage?> GetMessage(string messageId, string conversationId)
         {
