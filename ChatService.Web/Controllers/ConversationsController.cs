@@ -139,11 +139,17 @@ namespace ChatService.Web.Controllers
             {
                 nextUri += $"limit={limit}&";
             }
-            nextUri += $"lastSeenMessageTime={response.lastSeenMessageTime}&continuationToken={response.continuationToken}";
+            if(response.lastSeenMessageTime != null && response.lastSeenMessageTime != 0)
+            {
+                nextUri += $"lastSeenMessageTime={lastSeenMessageTime}&";
+            }
+            if (!string.IsNullOrEmpty(response.continuationToken)){
+                nextUri += $"continuationToken={response.continuationToken}";
+            }
             nextUri = WebUtility.UrlEncode(nextUri);
             return Ok(
                 new EnumerateConversationMessagesResponse(
-                    response.Messages,
+                    response.ConversationMessages,
                     nextUri
                     )
                 );
