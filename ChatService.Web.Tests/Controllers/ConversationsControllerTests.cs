@@ -14,6 +14,7 @@ using ChatService.Web.Dtos.Conversations;
 using ChatService.Web.Dtos.Messages;
 using ChatService.Web.Dtos.Profiles;
 using ChatService.Web.Exceptions;
+using System.Net.Http;
 
 namespace ChatService.Web.Tests.Controllers
 {
@@ -335,27 +336,42 @@ namespace ChatService.Web.Tests.Controllers
         }
 
         [Fact]
-        public async Task EnumerateConversationMessages()
+        public async Task EnumerateConversationMessagesNextUriGeneration()
         {
-            var message = new ConversationMessage(Text: "hello", SenderUsername: "foo", UnixTime: 1);
-            var expectedResponse = new EnumerateConversationMessagesResponse(
-                Messages: new List<ConversationMessage> { message }, NextUri: "/api/conversations/foo_bar/messages?");
+            var message = new ConversationMessage(Text: "hello", SenderUsername: "foo", UnixTime: 123);
+            var enumerateResponse = new EnumerateConversationMessages(
+                continuationToken: "next",
+                lastSeenMessageTime: message.UnixTime,
+                ConversationMessages: new ConversationMessage[] { message }
+                );
             var conversation = new UserConversation("foo_bar", 123,"foo","bar");
-            _conversationServiceMock.Setup(m => m.GetConversation("foo_bar")).ReturnsAsync(conversation);
-            _conversationServiceMock.Setup(m => m.EnumerateConversationMessages("foo_bar", null, null, null))
-                .ReturnsAsync(expectedResponse);
-            var response = await _httpClient.GetAsync($"/Conversations/foo_bar/messages");
-            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            var continuationToken = "toBeContinued";
+            var limit = 10;
+            var lastSeenMessageTime = 123;
+            _conversationServiceMock.Setup(m => m.GetConversation(conversation.Id)).ReturnsAsync(conversation);
+            _conversationServiceMock.Setup(m => m.EnumerateConversationMessages(conversation.Id, continuationToken, limit, lastSeenMessageTime))
+                .ReturnsAsync(enumerateResponse);
+            var response = await _httpClient.GetAsync($"/Conversations/{conversation.Id}/messages?&limit={limit}&lastSeenMessageTime={lastSeenMessageTime}&continuationToken={continuationToken}");
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var actualResponse = JsonConvert.DeserializeObject<EnumerateConversationMessagesResponse>(responseContent);
+
+            var expectedNextUri = $"/api/conversations/{conversation.Id}/messages?&limit={limit}&lastSeenMessageTime={enumerateResponse.lastSeenMessageTime}&continuationToken={enumerateResponse.continuationToken}";
+            expectedNextUri =  WebUtility.UrlEncode(expectedNextUri);
+            response.EnsureSuccessStatusCode();
+            Assert.Equal(expectedNextUri, actualResponse.NextUri);
         }
 
         [Fact]
         public async Task EnumerateConversationMessages_ConversationNotFound()
         {
             var message = new ConversationMessage(Text: "hello", SenderUsername: "foo", UnixTime: 1);
-            var expectedResponse = new EnumerateConversationMessagesResponse(
-                Messages: new List<ConversationMessage> { message }, NextUri: "/api/conversations/foo_bar/messages?");
+            var enumerateResponse = new EnumerateConversationMessages(
+                continuationToken: null,
+                lastSeenMessageTime: message.UnixTime,
+                ConversationMessages: new ConversationMessage[] { message }
+                );
             _conversationServiceMock.Setup(m => m.EnumerateConversationMessages("foo_bar", null, null, null))
-                .ReturnsAsync(expectedResponse);
+                .ReturnsAsync(enumerateResponse);
             var response = await _httpClient.GetAsync($"/Conversations/foo_bar/messages");
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         }
