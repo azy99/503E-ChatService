@@ -5,6 +5,7 @@ using ChatService.Web.Services;
 using ChatService.Web.Storage;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
 
 namespace ChatService.Web.Controllers
 {
@@ -133,7 +134,19 @@ namespace ChatService.Web.Controllers
 
             var response = await _conversationService.EnumerateConversationMessages(conversationId, continuationToken,
                 limit, lastSeenMessageTime);
-            return Ok(response);
+            var nextUri = $"/api/conversations/{conversationId}/messages?&";
+            if (limit != null && limit != 0)
+            {
+                nextUri += $"limit={limit}&";
+            }
+            nextUri += $"lastSeenMessageTime={response.lastSeenMessageTime}&continuationToken={response.continuationToken}";
+            nextUri = WebUtility.UrlEncode(nextUri);
+            return Ok(
+                new EnumerateConversationMessagesResponse(
+                    response.Messages,
+                    nextUri
+                    )
+                );
 
         }
 
