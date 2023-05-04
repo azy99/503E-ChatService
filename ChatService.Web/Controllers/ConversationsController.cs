@@ -106,7 +106,6 @@ namespace ChatService.Web.Controllers
             }
         }
 
-
         [HttpGet]
         public async Task<ActionResult<EnumerateConversationsResponse>> EnumerateConversations(string username,
             string? continuationToken, int? limit, long? lastSeenConversationTime)
@@ -126,36 +125,30 @@ namespace ChatService.Web.Controllers
         public async Task<ActionResult<EnumerateConversationMessagesResponse>> EnumerateConversationMessages(string conversationId, string? continuationToken, int? limit,
             long? lastSeenMessageTime)
         {
-            var conv = await _conversationService.GetConversation(conversationId);
-            if (conv == null)
+            try
             {
-                return NotFound($"A Conversation with id {conversationId} was not found");
+                var response = await _conversationService.EnumerateConversationMessages(conversationId, continuationToken,
+                    limit, lastSeenMessageTime);
+                var nextUri = $"/api/conversations/{conversationId}/messages?&";
+                if (limit != null && limit != 0)
+                {
+                    nextUri += $"limit={limit}&";
+                }
+                if (response.lastSeenMessageTime != null && response.lastSeenMessageTime != 0)
+                {
+                    nextUri += $"lastSeenMessageTime={lastSeenMessageTime}&";
+                }
+                if (!string.IsNullOrEmpty(response.continuationToken))
+                {
+                    nextUri += $"continuationToken={response.continuationToken}";
+                }
+                nextUri = WebUtility.UrlEncode(nextUri);
+                return Ok(new EnumerateConversationMessagesResponse(response.ConversationMessages, nextUri));
             }
-
-            var response = await _conversationService.EnumerateConversationMessages(conversationId, continuationToken,
-                limit, lastSeenMessageTime);
-            var nextUri = $"/api/conversations/{conversationId}/messages?&";
-            if (limit != null && limit != 0)
+            catch (ConversationDoesNotExist ex)
             {
-                nextUri += $"limit={limit}&";
+                return NotFound(ex.Message);
             }
-            if(response.lastSeenMessageTime != null && response.lastSeenMessageTime != 0)
-            {
-                nextUri += $"lastSeenMessageTime={lastSeenMessageTime}&";
-            }
-            if (!string.IsNullOrEmpty(response.continuationToken)){
-                nextUri += $"continuationToken={response.continuationToken}";
-            }
-            nextUri = WebUtility.UrlEncode(nextUri);
-            return Ok(
-                new EnumerateConversationMessagesResponse(
-                    response.ConversationMessages,
-                    nextUri
-                    )
-                );
-
         }
-
     }
-
 }
