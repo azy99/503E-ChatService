@@ -61,10 +61,18 @@ namespace ChatService.Web.Services
             return _conversationStore.GetConversation(conversationID);
         }
 
-        public Task<EnumerateConversationsResponse> EnumerateConversations(string username,
-            string? continuationToken, int? limit, long? lastSeenConversationTime)
+        public async Task<EnumerateConversations> EnumerateConversations(string username, string? continuationToken,
+            int? limit, long? lastSeenConversationTime)
         {
-            return _conversationStore.EnumerateConversations(username, continuationToken, limit, lastSeenConversationTime);
+            try
+            {
+                await _validationManager.CheckIfSenderExists(username);
+            }
+            catch (SenderDoesNotExist ex)
+            {
+                throw ex;
+            }
+            return await _conversationStore.EnumerateConversations(username, continuationToken, limit, lastSeenConversationTime);
         }
 
         public async Task<EnumerateConversationMessages> EnumerateConversationMessages(string conversationId,
