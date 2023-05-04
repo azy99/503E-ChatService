@@ -104,7 +104,7 @@ namespace ChatService.Web.Storage
             return new EnumerateConversationsResponse(conversations, nextUri);
         }
 
-        public async Task<EnumerateConversationMessagesResponse> EnumerateConversationMessages(string conversationId,
+        public async Task<EnumerateConversationMessages> EnumerateConversationMessages(string conversationId,
             string? continuationToken, int? limit, long? lastSeenMessageTime)
         {
             var query = lastSeenMessageTime != null && string.IsNullOrEmpty(continuationToken)
@@ -122,26 +122,14 @@ namespace ChatService.Web.Storage
                 }
             );
             var messageEntities = await getMessages.ReadNextAsync();
-            var messages = new List<ConversationMessage>();
+            var messages = new ConversationMessage[] { };
             foreach (var m in messageEntities)
             {
-                messages.Add(ToConversationMessage(m));
+                messages.Append(ToConversationMessage(m));
             }
             var nextContinuationToken = messageEntities.ContinuationToken;
-            var nextUri = $"/api/conversations/{conversationId}/messages/?";
-            
-            if (limit != null && limit != 0)
-            {
-                nextUri += $"limit={limit}&";
-            }
-            
-            if (messages.Count > 0)
-            {
-                var lastSeen = messages[0].UnixTime;
-                nextUri += $"lastSeenMessageTime={lastSeen}&continuationToken={nextContinuationToken}";
-            }
-
-            return new EnumerateConversationMessagesResponse(messages, nextUri);
+            lastSeenMessageTime = messages.Length > 0 ? messages[-1].UnixTime : 0;
+            return new EnumerateConversationMessages(nextContinuationToken, (long)lastSeenMessageTime, messages);
         }
         public async Task UpsertConversation(UserConversation UserConversation)
         {
