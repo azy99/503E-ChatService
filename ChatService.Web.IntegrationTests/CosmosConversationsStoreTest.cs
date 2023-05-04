@@ -25,6 +25,7 @@ namespace ChatService.Web.IntegrationTests
 {
     public class CosmosConversationsStoreTest : IClassFixture<WebApplicationFactory<Program>>, IAsyncLifetime
     {
+        private readonly IProfileStore _profileStore;
         private readonly IConversationStore _conversationStore;
         private readonly IMessageStore _messageStore;
         string _guidSender, _guidReceiver;
@@ -43,6 +44,7 @@ namespace ChatService.Web.IntegrationTests
         {
             _guidSender = Guid.NewGuid().ToString();
             _guidReceiver = Guid.NewGuid().ToString();
+            _profileStore = factory.Services.GetRequiredService<IProfileStore>();
             _conversationStore = factory.Services.GetRequiredService<IConversationStore>();
             _messageStore = factory.Services.GetRequiredService<IMessageStore>();
             _conversation = new(
@@ -91,6 +93,41 @@ namespace ChatService.Web.IntegrationTests
         {
                 await _conversationStore.DeleteConversation(_conversation.Sender, _conversation.Id);
         }
+        [Fact]
+        public async Task EnumerateConversations()
+        {
+            UserConversation firstUserConversation = new UserConversation(
+                Id: _conversation.Id,
+                LastModifiedUnixTime: 2,
+                Sender: _conversation.Sender,
+                Receiver: _conversation.Receiver
+                );
+            UserConversation secondUserConversation = new UserConversation(
+                Id: _conversation.Id + "1",
+                LastModifiedUnixTime: 3,
+                Sender: _conversation.Sender,
+                Receiver: _conversation.Receiver + "1"
+                );
+            await _conversationStore.AddConversation(firstUserConversation);
+            await _conversationStore.AddConversation(secondUserConversation);
+            var receiverOneProfile = new Profile(_guidReceiver, "fo", "fo", "fo");
+            var receiverTwoProfile = new Profile(_guidReceiver+"1", "fa", "fa", "fa");
+            await _profileStore.UpsertProfile(receiverOneProfile);
+            await _profileStore.UpsertProfile(receiverTwoProfile);
+            Conversation firstConversation = FromUserConversationToConversation(firstUserConversation, receiverOneProfile);
+            Conversation secondConversation = FromUserConversationToConversation(secondUserConversation, receiverTwoProfile);
+            var limit = 1;
+           
+            var expectedConversations = new Conversation[] { secondConversation };
+            var response = await _conversationStore.EnumerateConversations(_conversation.Sender, null, limit, null);
+            Assert.Equal(expectedConversations, response.Conversations);
+            Assert.Equal(secondConversation.LastModifiedUnixTime,response.lastSeenConversationTime);
+            
+            expectedConversations = new Conversation[] { firstConversation };
+            response = await _conversationStore.EnumerateConversations(_conversation.Sender, response.continuationToken, limit, response.lastSeenConversationTime);
+            Assert.Equal(expectedConversations, response.Conversations);
+            Assert.Equal(firstConversation.LastModifiedUnixTime, response.lastSeenConversationTime);
+        }
 
         [Fact]
         public async Task EnumerateConversationMessages()
@@ -124,6 +161,10 @@ namespace ChatService.Web.IntegrationTests
             response = await _conversationStore.EnumerateConversationMessages(userConversation.Id, response.continuationToken, limit, response.lastSeenMessageTime);
             Assert.Equal(response.ConversationMessages, expectedMessages);
             Assert.Equal(response.lastSeenMessageTime, firstConversationMessage.UnixTime);
+        }
+        public Conversation FromUserConversationToConversation(UserConversation userConversation, Profile receiverProfile)
+        {
+            return new Conversation(userConversation.Id, userConversation.LastModifiedUnixTime, receiverProfile);
         }
     }
 }
