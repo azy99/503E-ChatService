@@ -312,24 +312,12 @@ namespace ChatService.Web.Tests.Controllers
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
-
-        //[Fact]
-        //public async Task EnumerateConversations_UserNotFound()
-        //{
-        //    var recipient = new Profile("foobar", "Foo", "Bar","5b0fa492-3271-4131-bb6b-519c263d6c7b");
-        //    var conversation = new Conversation(Id: "abcdef", LastModifiedUnixTime: 2, Recipient: recipient);
-        //    var expectedResponse = new EnumerateConversationsResponse(Conversations:new List<Conversation>{conversation}, NextUri: "/api/conversations/?username=foobar&");
-        //    _conversationServiceMock.Setup(m => m.EnumerateConversations("foo",null,null,null)).ReturnsAsync(expectedResponse);
-        //    var response = await _httpClient.GetAsync($"/Conversations?username=foo");
-        //    Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
-        //}
-
         [Fact]
         public async Task EnumerateConversations()
         {
             var senderProfile = new Profile("foofoo", "foo", "bar", "1");
             var recipientProfile = new Profile("foobar", "bar", "foo", "2");
-            var conversation = new Conversation(senderProfile.Username+recipientProfile.Username, 1, recipientProfile);
+            var conversation = new Conversation(senderProfile.Username+"_"+recipientProfile.Username, 1, recipientProfile);
             var enumerateResponse = new EnumerateConversations(
                 continuationToken: "next",
                 lastSeenConversationTime: conversation.LastModifiedUnixTime,
