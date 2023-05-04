@@ -6,7 +6,7 @@ namespace ChatService.Web.Services
     {
         Task <StartConversationResponse> CreateConversation(StartConversationRequest request);
         Task<UserConversation?> GetConversation(string conversationID);
-        Task<EnumerateConversationsResponse> EnumerateConversations(string username,
+        Task<EnumerateConversations> EnumerateConversations(string username,
             string? continuationToken, int? limit, long? lastSeenConversationTime);
 
         Task<EnumerateConversationMessages> EnumerateConversationMessages(string conversationId, string? continuationToken, int? limit,
