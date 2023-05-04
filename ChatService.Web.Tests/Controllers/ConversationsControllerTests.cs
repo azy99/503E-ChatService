@@ -365,14 +365,11 @@ namespace ChatService.Web.Tests.Controllers
         public async Task EnumerateConversationMessages_ConversationNotFound()
         {
             var message = new ConversationMessage(Text: "hello", SenderUsername: "foo", UnixTime: 1);
-            var enumerateResponse = new EnumerateConversationMessages(
-                continuationToken: null,
-                lastSeenMessageTime: message.UnixTime,
-                ConversationMessages: new ConversationMessage[] { message }
-                );
+            var conversationId = "foo_bar";
+            var expectedResponse = new ConversationDoesNotExist(conversationId);
             _conversationServiceMock.Setup(m => m.EnumerateConversationMessages("foo_bar", null, null, null))
-                .ReturnsAsync(enumerateResponse);
-            var response = await _httpClient.GetAsync($"/Conversations/foo_bar/messages");
+                .ThrowsAsync(expectedResponse);
+            var response = await _httpClient.GetAsync($"/Conversations/{conversationId}/messages");
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         }
     }
