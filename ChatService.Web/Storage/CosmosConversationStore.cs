@@ -125,10 +125,10 @@ namespace ChatService.Web.Storage
             var messages = new ConversationMessage[] { };
             foreach (var m in messageEntities)
             {
-                messages.Append(ToConversationMessage(m));
+                messages = messages.Append(ToConversationMessage(m)).ToArray();
             }
             var nextContinuationToken = messageEntities.ContinuationToken;
-            lastSeenMessageTime = messages.Length > 0 ? messages[-1].UnixTime : 0;
+            lastSeenMessageTime = messages.Length > 0 ? messages.Last().UnixTime : 0;
             return new EnumerateConversationMessages(nextContinuationToken, (long)lastSeenMessageTime, messages);
         }
         public async Task UpsertConversation(UserConversation UserConversation)
