@@ -10,7 +10,7 @@ using System.Net;
 namespace ChatService.Web.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     public class ConversationsController : ControllerBase { 
         private readonly IConversationService _conversationService;
         private readonly IMessageService _messageService;
@@ -124,9 +124,9 @@ namespace ChatService.Web.Controllers
                 }
                 if (!string.IsNullOrEmpty(response.continuationToken))
                 {
-                    nextUri += $"continuationToken={response.continuationToken}";
+                    var continuationTokenEncoded = WebUtility.UrlEncode(response.continuationToken);
+                    nextUri += $"continuationToken={continuationTokenEncoded}";
                 }
-                nextUri = WebUtility.UrlEncode(nextUri);
                 return Ok(new EnumerateConversationsResponse(response.Conversations, nextUri));
             }
             catch(SenderDoesNotExist ex)
@@ -154,9 +154,9 @@ namespace ChatService.Web.Controllers
                 }
                 if (!string.IsNullOrEmpty(response.continuationToken))
                 {
-                    nextUri += $"continuationToken={response.continuationToken}";
+                    var continuationTokenEncoded = WebUtility.UrlEncode(response.continuationToken);
+                    nextUri += $"continuationToken={continuationTokenEncoded}";
                 }
-                nextUri = WebUtility.UrlEncode(nextUri);
                 return Ok(new EnumerateConversationMessagesResponse(response.ConversationMessages, nextUri));
             }
             catch (ConversationDoesNotExist ex)
