@@ -110,27 +110,29 @@ namespace ChatService.Web.Controllers
         public async Task<ActionResult<EnumerateConversationsResponse>> EnumerateConversations(string username,
             string? continuationToken, int? limit, long? lastSeenConversationTime)
         {
-            //var existingProfile = await _profileStore.GetProfile(username);
-            //if (existingProfile == null)
-            //{
-            //    return NotFound($"A User with username {username} was not found");
-            //}
-
-            var response = await _conversationService.EnumerateConversations(username,continuationToken, limit, lastSeenConversationTime);
-            var nextUri = $"/api/conversations?username={username}&";
-            if (limit != null && limit != 0)
+            try
             {
-                nextUri += $"limit={limit}&";
-            }
-            if (response.lastSeenConversationTime != null && response.lastSeenConversationTime != 0)
+                var response = await _conversationService.EnumerateConversations(username, continuationToken, limit, lastSeenConversationTime);
+                var nextUri = $"/api/conversations?username={username}&";
+                if (limit != null && limit != 0)
                 {
-                nextUri += $"lastSeenConversationTime={response.lastSeenConversationTime}&";
+                    nextUri += $"limit={limit}&";
+                }
+                if (response.lastSeenConversationTime != null && response.lastSeenConversationTime != 0)
+                {
+                    nextUri += $"lastSeenConversationTime={response.lastSeenConversationTime}&";
+                }
+                if (!string.IsNullOrEmpty(response.continuationToken))
+                {
+                    nextUri += $"continuationToken={response.continuationToken}";
+                }
+                nextUri = WebUtility.UrlEncode(nextUri);
+                return Ok(new EnumerateConversationsResponse(response.Conversations, nextUri));
             }
-            if (!string.IsNullOrEmpty(response.continuationToken))
+            catch(SenderDoesNotExist ex)
             {
-                nextUri += $"continuationToken={response.continuationToken}";
+                return NotFound(ex.Message);
             }
-            return Ok(new EnumerateConversationsResponse(response.Conversations, nextUri));
         }
 
         [HttpGet("{conversationId}/messages")]
