@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace ChatService.Web.Controllers;
 
 [ApiController]
-[Route("[controller]")]
+[Route("api/[controller]")]
 public class ProfileController : ControllerBase
 {
     private readonly IProfileStore _profileStore;
