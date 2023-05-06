@@ -8,6 +8,7 @@ using ChatService.Web.Storage;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.VisualBasic;
 using Moq;
 using Newtonsoft.Json;
 using System;
@@ -177,6 +178,66 @@ namespace ChatService.Web.Tests.Service
             var functionCall = _conversationService.CreateConversation(request);
 
             var exception = await Assert.ThrowsAsync<InvalidMessageParams>(async () => await functionCall);
+            Assert.Equal(expectedResponse.Message, exception.Message);
+        }
+        [Fact]
+        public async Task EnumerateConversations()
+        {
+            var senderProfile = new Profile("foofoo", "foo", "bar", "1");
+            var recipientProfile = new Profile("foobar", "bar", "foo", "2");
+            var conversation = new Conversation(senderProfile.Username + "_" + recipientProfile.Username, 1, recipientProfile);
+            var limit = 10;
+            var continuationToken = "x";
+            var lastSeenConversationTime = 1;
+            var conversations = new Conversation[] { conversation };
+            var enumerateConversations = new EnumerateConversations(continuationToken, lastSeenConversationTime, conversations);
+            _profileStorageMock.Setup(p => p.GetProfile(senderProfile.Username)).ReturnsAsync(senderProfile);
+            _conversationStorageMock.Setup(x => x.EnumerateConversations(senderProfile.Username,continuationToken, limit, lastSeenConversationTime))
+                .ReturnsAsync(enumerateConversations);
+            var result = await _conversationService.EnumerateConversations(senderProfile.Username,continuationToken, limit, lastSeenConversationTime);
+            Assert.Equal(enumerateConversations, result);
+        }
+        [Fact]
+        public async Task EnumerateConversations_ProfileDoesNotExist()
+        {
+            var senderProfile = new Profile("foofoo", "foo", "bar", "1");
+            var expectedResponse = new SenderDoesNotExist(senderProfile.Username);
+            var limit = 10;
+            var continuationToken = "x";
+            var lastSeenConversationTime = 1;
+            var functionCall = _conversationService.EnumerateConversations(senderProfile.Username, continuationToken, limit, lastSeenConversationTime);
+            var result = await Assert.ThrowsAsync<SenderDoesNotExist>(async () => await functionCall);
+            Assert.Equal(expectedResponse.Message, result.Message);
+        }
+        [Fact]
+        public async Task EnumerateConversationMessages()
+        {
+            var conversation = new UserConversation("foo_bar", 2, "foo", "bar");
+            var message = new ConversationMessage("Hi", "foo", 1);
+            var limit = 10;
+            var continuationToken = "x";
+            var lastSeenMessageTime = 1;
+            var conversationMessages = new ConversationMessage[]{message};
+
+            var enumerateConversationMessages = new EnumerateConversationMessages(continuationToken, lastSeenMessageTime,conversationMessages);
+            _conversationStorageMock.Setup(x => x.GetConversation(conversation.Id)).ReturnsAsync(conversation);
+            _conversationStorageMock.Setup(x => x.EnumerateConversationMessages(conversation.Id,continuationToken,limit,lastSeenMessageTime))
+                .ReturnsAsync(enumerateConversationMessages);
+            var result = await _conversationService.EnumerateConversationMessages(conversation.Id, continuationToken, limit, lastSeenMessageTime);
+            Assert.Equal(enumerateConversationMessages, result);
+        }
+
+        [Fact]
+        public async Task EnumerateConversationMessages_ConversationDoesNotExist()
+        {
+            var conversation = new UserConversation("foo_bar", 2, "foo", "bar");
+            var expectedResponse = new ConversationDoesNotExist(conversation.Id);
+            UserConversation notFound = null;
+            var result = await _conversationService.GetConversation("foo1_foo2");
+            Assert.Null(result);
+
+            var functionCall = _conversationService.EnumerateConversationMessages(conversation.Id, null, null, 1);
+            var exception = await Assert.ThrowsAsync<ConversationDoesNotExist>(async () => await functionCall);
             Assert.Equal(expectedResponse.Message, exception.Message);
         }
 

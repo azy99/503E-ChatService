@@ -14,6 +14,9 @@ using ChatService.Web.Dtos.Conversations;
 using ChatService.Web.Dtos.Messages;
 using ChatService.Web.Dtos.Profiles;
 using ChatService.Web.Exceptions;
+using System.Net.Http;
+using Microsoft.VisualStudio.TestPlatform.CommunicationUtilities;
+using Message = ChatService.Web.Dtos.Messages.Message;
 
 namespace ChatService.Web.Tests.Controllers
 {
@@ -309,54 +312,79 @@ namespace ChatService.Web.Tests.Controllers
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
-
         [Fact]
         public async Task EnumerateConversations()
         {
-            var recipient = new Profile("foobar", "Foo", "Bar","5b0fa492-3271-4131-bb6b-519c263d6c7b");
-            var conversation = new Conversation(Id: "abcdef", LastModifiedUnixTime: 2, Recipient: recipient);
-            var expectedResponse = new EnumerateConversationsResponse(Conversations:new List<Conversation>{conversation}, NextUri: "/api/conversations/?username=foobar&");
-            _profileStoreMock.Setup(m => m.GetProfile("foo")).ReturnsAsync(recipient);
-            _conversationServiceMock.Setup(m => m.EnumerateConversations("foo",null,null,null)).ReturnsAsync(expectedResponse);
-            var response =
-                await _httpClient.GetAsync($"/Conversations?username=foo");
-            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        }
+            var senderProfile = new Profile("foofoo", "foo", "bar", "1");
+            var recipientProfile = new Profile("foobar", "bar", "foo", "2");
+            var conversation = new Conversation(senderProfile.Username+"_"+recipientProfile.Username, 1, recipientProfile);
+            var enumerateResponse = new EnumerateConversations(
+                continuationToken: "next",
+                lastSeenConversationTime: conversation.LastModifiedUnixTime,
+                Conversations: new Conversation[] { conversation }
+                );
 
+            var limit = 10;
+            var lastSeenConversationTime = 1;
+            var continuationToken = "toBeContinued";
+            var conversations = new Conversation[] { conversation };
+
+            _conversationServiceMock.Setup(m => m.EnumerateConversations(senderProfile.Username, continuationToken, limit, lastSeenConversationTime))
+                .ReturnsAsync(enumerateResponse);
+            var response = await _httpClient.GetAsync($"/Conversations?username={senderProfile.Username}&limit={limit}&lastSeenConversationTime={lastSeenConversationTime}&continuationToken={continuationToken}");
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var actualResponse = JsonConvert.DeserializeObject<EnumerateConversationMessagesResponse>(responseContent);
+
+            var expectedNextUri = $"/api/conversations?username={senderProfile.Username}&limit={limit}&lastSeenConversationTime={enumerateResponse.lastSeenConversationTime}&continuationToken={enumerateResponse.continuationToken}";
+            expectedNextUri = WebUtility.UrlEncode(expectedNextUri);
+            response.EnsureSuccessStatusCode();
+            Assert.Equal(expectedNextUri, actualResponse.NextUri);
+        }
         [Fact]
-        public async Task EnumerateConversations_UserNotFound()
+        public async Task EnumerateConversation_ProfileNotFound()
         {
-            var recipient = new Profile("foobar", "Foo", "Bar","5b0fa492-3271-4131-bb6b-519c263d6c7b");
-            var conversation = new Conversation(Id: "abcdef", LastModifiedUnixTime: 2, Recipient: recipient);
-            var expectedResponse = new EnumerateConversationsResponse(Conversations:new List<Conversation>{conversation}, NextUri: "/api/conversations/?username=foobar&");
-            _conversationServiceMock.Setup(m => m.EnumerateConversations("foo",null,null,null)).ReturnsAsync(expectedResponse);
-            var response = await _httpClient.GetAsync($"/Conversations?username=foo");
+            var senderProfile = new Profile("foo", "foo", "bar", "1");
+            var expectedResponse = new SenderDoesNotExist(senderProfile.Username);
+            _conversationServiceMock.Setup(m => m.EnumerateConversations("foo", null, null, null))
+                .ThrowsAsync(expectedResponse);
+            var response = await _httpClient.GetAsync($"/Conversations?username={senderProfile.Username}");
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         }
-
         [Fact]
-        public async Task EnumerateConversationMessages()
+        public async Task EnumerateConversationMessagesNextUriGeneration()
         {
-            var message = new ConversationMessage(Text: "hello", SenderUsername: "foo", UnixTime: 1);
-            var expectedResponse = new EnumerateConversationMessagesResponse(
-                Messages: new List<ConversationMessage> { message }, NextUri: "/api/conversations/foo_bar/messages?");
+            var message = new ConversationMessage(Text: "hello", SenderUsername: "foo", UnixTime: 123);
+            var enumerateResponse = new EnumerateConversationMessages(
+                continuationToken: "next",
+                lastSeenMessageTime: message.UnixTime,
+                ConversationMessages: new ConversationMessage[] { message }
+                );
+
             var conversation = new UserConversation("foo_bar", 123,"foo","bar");
-            _conversationServiceMock.Setup(m => m.GetConversation("foo_bar")).ReturnsAsync(conversation);
-            _conversationServiceMock.Setup(m => m.EnumerateConversationMessages("foo_bar", null, null, null))
-                .ReturnsAsync(expectedResponse);
-            var response = await _httpClient.GetAsync($"/Conversations/foo_bar/messages");
-            Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+            var limit = 10;
+            var lastSeenMessageTime = 123;
+            var continuationToken = "toBeContinued";
+            _conversationServiceMock.Setup(m => m.EnumerateConversationMessages(conversation.Id, continuationToken, limit, lastSeenMessageTime))
+                .ReturnsAsync(enumerateResponse);
+            var response = await _httpClient.GetAsync($"/Conversations/{conversation.Id}/messages?&limit={limit}&lastSeenMessageTime={lastSeenMessageTime}&continuationToken={continuationToken}");
+            var responseContent = await response.Content.ReadAsStringAsync();
+            var actualResponse = JsonConvert.DeserializeObject<EnumerateConversationMessagesResponse>(responseContent);
+
+            var expectedNextUri = $"/api/conversations/{conversation.Id}/messages?&limit={limit}&lastSeenMessageTime={enumerateResponse.lastSeenMessageTime}&continuationToken={enumerateResponse.continuationToken}";
+            expectedNextUri =  WebUtility.UrlEncode(expectedNextUri);
+            response.EnsureSuccessStatusCode();
+            Assert.Equal(expectedNextUri, actualResponse.NextUri);
         }
 
         [Fact]
         public async Task EnumerateConversationMessages_ConversationNotFound()
         {
             var message = new ConversationMessage(Text: "hello", SenderUsername: "foo", UnixTime: 1);
-            var expectedResponse = new EnumerateConversationMessagesResponse(
-                Messages: new List<ConversationMessage> { message }, NextUri: "/api/conversations/foo_bar/messages?");
+            var conversationId = "foo_bar";
+            var expectedResponse = new ConversationDoesNotExist(conversationId);
             _conversationServiceMock.Setup(m => m.EnumerateConversationMessages("foo_bar", null, null, null))
-                .ReturnsAsync(expectedResponse);
-            var response = await _httpClient.GetAsync($"/Conversations/foo_bar/messages");
+                .ThrowsAsync(expectedResponse);
+            var response = await _httpClient.GetAsync($"/Conversations/{conversationId}/messages");
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         }
     }

@@ -45,33 +45,12 @@ namespace ChatService.Web.Services
             {
                 throw ex;
             }
-
-            //UserMessage message = new (
-            //    ConversationId : request.Participants[0] + "_" + request.Participants[1],
-            //    Id: request.FirstMessage.Id,
-            //    Text: request.FirstMessage.Text,
-            //    SenderUsername: request.FirstMessage.SenderUsername,
-            //    UnixTime : DateTimeOffset.UtcNow.ToUnixTimeSeconds()
-            //    );
             UserMessage message = createUserMessageForConversationStart(request);
             (UserConversation, UserConversation) conversations = createConversationUserConversations(request);
-            //UserConversation conversation1 = new (
-            //    Id : request.Participants[0] + "_" + request.Participants[1],
-            //    LastModifiedUnixTime : DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-            //    Sender: request.Participants[0],
-            //    Receiver: request.Participants[1]
-            //    );
-            //UserConversation conversation2 = new(
-            //    Id: request.Participants[1] + "_" + request.Participants[0],
-            //    LastModifiedUnixTime: DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
-            //    Sender: request.Participants[1],
-            //    Receiver: request.Participants[0]
-            //    );
 
             var addMessageTask = _messageStore.AddMessage(message);
             var addConversation1Task = _conversationStore.AddConversation(conversations.Item1);
             var addConversation2Task = _conversationStore.AddConversation(conversations.Item2);
-
             await Task.WhenAll( addMessageTask, addConversation1Task, addConversation2Task );
 
             return addConversation1Task.Result;
@@ -82,16 +61,32 @@ namespace ChatService.Web.Services
             return _conversationStore.GetConversation(conversationID);
         }
 
-        public Task<EnumerateConversationsResponse> EnumerateConversations(string username,
-            string? continuationToken, int? limit, long? lastSeenConversationTime)
+        public async Task<EnumerateConversations> EnumerateConversations(string username, string? continuationToken,
+            int? limit, long? lastSeenConversationTime)
         {
-            return _conversationStore.EnumerateConversations(username, continuationToken, limit, lastSeenConversationTime);
+            try
+            {
+                await _validationManager.CheckIfSenderExists(username);
+            }
+            catch (SenderDoesNotExist ex)
+            {
+                throw ex;
+            }
+            return await _conversationStore.EnumerateConversations(username, continuationToken, limit, lastSeenConversationTime);
         }
 
-        public Task<EnumerateConversationMessagesResponse> EnumerateConversationMessages(string conversationId,
+        public async Task<EnumerateConversationMessages> EnumerateConversationMessages(string conversationId,
             string? continuationToken, int? limit, long? lastSeenMessageTime)
         {
-            return _conversationStore.EnumerateConversationMessages(conversationId, continuationToken, limit,
+            try
+            {
+                await _validationManager.CheckIfConversationExists(conversationId);
+            }
+            catch (ConversationDoesNotExist ex)
+            {
+                throw ex;
+            }
+            return await _conversationStore.EnumerateConversationMessages(conversationId, continuationToken, limit,
                 lastSeenMessageTime);
         }
         public (UserConversation,UserConversation) createConversationUserConversations(StartConversationRequest request)

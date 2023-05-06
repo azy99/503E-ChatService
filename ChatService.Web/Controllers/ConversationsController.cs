@@ -5,11 +5,12 @@ using ChatService.Web.Services;
 using ChatService.Web.Storage;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using System.Net;
 
 namespace ChatService.Web.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     public class ConversationsController : ControllerBase { 
         private readonly IConversationService _conversationService;
         private readonly IMessageService _messageService;
@@ -105,38 +106,63 @@ namespace ChatService.Web.Controllers
             }
         }
 
-
         [HttpGet]
         public async Task<ActionResult<EnumerateConversationsResponse>> EnumerateConversations(string username,
             string? continuationToken, int? limit, long? lastSeenConversationTime)
         {
-            var existingProfile = await _profileStore.GetProfile(username);
-            if (existingProfile == null)
+            try
             {
-                return NotFound($"A User with username {username} was not found");
+                var response = await _conversationService.EnumerateConversations(username, continuationToken, limit, lastSeenConversationTime);
+                var nextUri = $"/api/conversations?username={username}&";
+                if (limit != null && limit != 0)
+                {
+                    nextUri += $"limit={limit}&";
+                }
+                if (response.lastSeenConversationTime != null && response.lastSeenConversationTime != 0)
+                {
+                    nextUri += $"lastSeenConversationTime={response.lastSeenConversationTime}&";
+                }
+                if (!string.IsNullOrEmpty(response.continuationToken))
+                {
+                    var continuationTokenEncoded = WebUtility.UrlEncode(response.continuationToken);
+                    nextUri += $"continuationToken={continuationTokenEncoded}";
+                }
+                return Ok(new EnumerateConversationsResponse(response.Conversations, nextUri));
             }
-
-            var response = await _conversationService.EnumerateConversations(username,continuationToken, limit, lastSeenConversationTime);
-
-            return Ok(response);
+            catch(SenderDoesNotExist ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
 
         [HttpGet("{conversationId}/messages")]
         public async Task<ActionResult<EnumerateConversationMessagesResponse>> EnumerateConversationMessages(string conversationId, string? continuationToken, int? limit,
             long? lastSeenMessageTime)
         {
-            var conv = await _conversationService.GetConversation(conversationId);
-            if (conv == null)
+            try
             {
-                return NotFound($"A Conversation with id {conversationId} was not found");
+                var response = await _conversationService.EnumerateConversationMessages(conversationId, continuationToken,
+                    limit, lastSeenMessageTime);
+                var nextUri = $"/api/conversations/{conversationId}/messages?&";
+                if (limit != null && limit != 0)
+                {
+                    nextUri += $"limit={limit}&";
+                }
+                if (response.lastSeenMessageTime != null && response.lastSeenMessageTime != 0)
+                {
+                    nextUri += $"lastSeenMessageTime={lastSeenMessageTime}&";
+                }
+                if (!string.IsNullOrEmpty(response.continuationToken))
+                {
+                    var continuationTokenEncoded = WebUtility.UrlEncode(response.continuationToken);
+                    nextUri += $"continuationToken={continuationTokenEncoded}";
+                }
+                return Ok(new EnumerateConversationMessagesResponse(response.ConversationMessages, nextUri));
             }
-
-            var response = await _conversationService.EnumerateConversationMessages(conversationId, continuationToken,
-                limit, lastSeenMessageTime);
-            return Ok(response);
-
+            catch (ConversationDoesNotExist ex)
+            {
+                return NotFound(ex.Message);
+            }
         }
-
     }
-
 }
