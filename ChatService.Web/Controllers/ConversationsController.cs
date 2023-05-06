@@ -11,11 +11,11 @@ namespace ChatService.Web.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    public class ConversationsController : ControllerBase { 
+    public class conversationsController : ControllerBase { 
         private readonly IConversationService _conversationService;
         private readonly IMessageService _messageService;
         private readonly IProfileStore _profileStore;
-        public ConversationsController(IConversationService conversationService, IMessageService messageService, IProfileStore profileStore)
+        public conversationsController(IConversationService conversationService, IMessageService messageService, IProfileStore profileStore)
         {
             _conversationService = conversationService;
             _messageService = messageService;
