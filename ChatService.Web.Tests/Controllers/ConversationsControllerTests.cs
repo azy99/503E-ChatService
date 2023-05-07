@@ -43,7 +43,7 @@ namespace ChatService.Web.Tests.Controllers
             _conversationServiceMock.Setup(m => m.GetConversation(conversation.Sender + "_" + conversation.Receiver))
             .ReturnsAsync(conversation);
 
-            var response = await _httpClient.GetAsync($"/Conversations/{conversation.Sender + "_" + conversation.Receiver}");
+            var response = await _httpClient.GetAsync($"api/Conversations/{conversation.Sender + "_" + conversation.Receiver}");
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             var json = await response.Content.ReadAsStringAsync();
             Assert.Equal(conversation, JsonConvert.DeserializeObject<UserConversation>(json));
@@ -55,7 +55,7 @@ namespace ChatService.Web.Tests.Controllers
             _conversationServiceMock.Setup(m => m.GetConversation("foobar"))
                 .ReturnsAsync((UserConversation?)null);
 
-            var response = await _httpClient.GetAsync($"/Conversations/foobar");
+            var response = await _httpClient.GetAsync($"api/Conversations/foobar");
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         }
 
@@ -71,7 +71,7 @@ namespace ChatService.Web.Tests.Controllers
             var json = JsonConvert.SerializeObject(request);
             var content = new StringContent(json, Encoding.Default, "application/json");
 
-            var response = await _httpClient.PostAsync("/Conversations", content);
+            var response = await _httpClient.PostAsync("api/Conversations", content);
 
             response.EnsureSuccessStatusCode();
             Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -87,7 +87,7 @@ namespace ChatService.Web.Tests.Controllers
                             .ThrowsAsync(expectedResponse);
             var json = JsonConvert.SerializeObject(request);
             var content = new StringContent(json, Encoding.Default, "application/json");
-            var response = await _httpClient.PostAsync("/Conversations", content);
+            var response = await _httpClient.PostAsync("api/Conversations", content);
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
@@ -102,7 +102,7 @@ namespace ChatService.Web.Tests.Controllers
 
             var json = JsonConvert.SerializeObject(request);
             var content = new StringContent(json, Encoding.Default, "application/json");
-            var response = await _httpClient.PostAsync("/Conversations", content);
+            var response = await _httpClient.PostAsync("api/Conversations", content);
             
             _conversationServiceMock.Verify(mock => mock.CreateConversation(It.IsAny<StartConversationRequest>()), Times.Once);
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -120,7 +120,7 @@ namespace ChatService.Web.Tests.Controllers
 
             var json = JsonConvert.SerializeObject(request);
             var content = new StringContent(json, Encoding.Default, "application/json");
-            var response = await _httpClient.PostAsync("/Conversations", content);
+            var response = await _httpClient.PostAsync("api/Conversations", content);
 
             _conversationServiceMock.Verify(mock => mock.CreateConversation(It.IsAny<StartConversationRequest>()), Times.Once);
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -138,7 +138,7 @@ namespace ChatService.Web.Tests.Controllers
 
             var json = JsonConvert.SerializeObject(request);
             var content = new StringContent(json, Encoding.Default, "application/json");
-            var response = await _httpClient.PostAsync("/Conversations", content);
+            var response = await _httpClient.PostAsync("api/Conversations", content);
 
             _conversationServiceMock.Verify(mock => mock.CreateConversation(It.IsAny<StartConversationRequest>()), Times.Once);
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -156,7 +156,7 @@ namespace ChatService.Web.Tests.Controllers
 
             var json = JsonConvert.SerializeObject(request);
             var content = new StringContent(json, Encoding.Default, "application/json");
-            var response = await _httpClient.PostAsync("/Conversations", content);
+            var response = await _httpClient.PostAsync("api/Conversations", content);
 
             _conversationServiceMock.Verify(mock => mock.CreateConversation(It.IsAny<StartConversationRequest>()), Times.Once);
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -174,7 +174,7 @@ namespace ChatService.Web.Tests.Controllers
 
             var json = JsonConvert.SerializeObject(request);
             var content = new StringContent(json, Encoding.Default, "application/json");
-            var response = await _httpClient.PostAsync("/Conversations", content);
+            var response = await _httpClient.PostAsync("api/Conversations", content);
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
@@ -189,7 +189,7 @@ namespace ChatService.Web.Tests.Controllers
 
             var json = JsonConvert.SerializeObject(request);
             var content = new StringContent(json, Encoding.Default, "application/json");
-            var response = await _httpClient.PostAsync("/Conversations", content);
+            var response = await _httpClient.PostAsync("api/Conversations", content);
 
             _conversationServiceMock.Verify(mock => mock.CreateConversation(It.IsAny<StartConversationRequest>()), Times.Once);
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -202,7 +202,7 @@ namespace ChatService.Web.Tests.Controllers
             var expectedResponse = new UserMessage("foo1_foo2", "1", "fel", "faa", 12345678910);
             _messageServiceMock.Setup(x => x.GetMessage("1", "foo1_foo2"))
                             .ReturnsAsync(expectedResponse);
-            var response = await _httpClient.GetAsync("/Conversations/foo1_foo2/1");
+            var response = await _httpClient.GetAsync("api/Conversations/foo1_foo2/1");
             response.EnsureSuccessStatusCode();
             Assert.Equal(HttpStatusCode.OK, response.StatusCode);
             _messageServiceMock.Verify(mock => mock.GetMessage("1", "foo1_foo2"), Times.Once);
@@ -213,7 +213,7 @@ namespace ChatService.Web.Tests.Controllers
             UserMessage expectedResponse = null;
             _messageServiceMock.Setup(x => x.GetMessage("1", "foo1_foo2"))
                             .ReturnsAsync(expectedResponse);
-            var response = await _httpClient.GetAsync("/Conversations/foo1_foo2/1");
+            var response = await _httpClient.GetAsync("api/Conversations/foo1_foo2/1");
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
             _messageServiceMock.Verify(mock => mock.GetMessage("1", "foo1_foo2"), Times.Once);
         }
@@ -227,7 +227,7 @@ namespace ChatService.Web.Tests.Controllers
             var json = JsonConvert.SerializeObject(message);
             var content = new StringContent(json, Encoding.Default, "application/json");
 
-            var response = await _httpClient.PostAsync("/Conversations/foo1_foo2/messages", content);
+            var response = await _httpClient.PostAsync("api/Conversations/foo1_foo2/messages", content);
 
             response.EnsureSuccessStatusCode();
             Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -243,7 +243,7 @@ namespace ChatService.Web.Tests.Controllers
                             .ThrowsAsync(expectedResponse);
             var json = JsonConvert.SerializeObject(message);
             var content = new StringContent(json, Encoding.Default, "application/json");
-            var response = await _httpClient.PostAsync($"/Conversations/{conversationId}/messages", content);
+            var response = await _httpClient.PostAsync($"api/Conversations/{conversationId}/messages", content);
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
             _messageServiceMock.Verify(mock => mock.PostMessageToConversation(conversationId, message), Times.Once);
@@ -260,7 +260,7 @@ namespace ChatService.Web.Tests.Controllers
                             .ThrowsAsync(expectedResponse);
             var json = JsonConvert.SerializeObject(message);
             var content = new StringContent(json, Encoding.Default, "application/json");
-            var response = await _httpClient.PostAsync($"/Conversations/{conversationId}/messages", content);
+            var response = await _httpClient.PostAsync($"api/Conversations/{conversationId}/messages", content);
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
             _messageServiceMock.Verify(mock => mock.PostMessageToConversation(conversationId, message), Times.Once);
@@ -277,7 +277,7 @@ namespace ChatService.Web.Tests.Controllers
                             .ThrowsAsync(expectedResponse);
             var json = JsonConvert.SerializeObject(message);
             var content = new StringContent(json, Encoding.Default, "application/json");
-            var response = await _httpClient.PostAsync($"/Conversations/{conversationId}/messages", content);
+            var response = await _httpClient.PostAsync($"api/Conversations/{conversationId}/messages", content);
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
@@ -291,7 +291,7 @@ namespace ChatService.Web.Tests.Controllers
                             .ThrowsAsync(expectedResponse);
             var json = JsonConvert.SerializeObject(message);
             var content = new StringContent(json, Encoding.Default, "application/json");
-            var response = await _httpClient.PostAsync($"/Conversations/{conversationId}/messages", content);
+            var response = await _httpClient.PostAsync($"api/Conversations/{conversationId}/messages", content);
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
             _messageServiceMock.Verify(mock => mock.PostMessageToConversation(conversationId, message), Times.Once);
@@ -308,7 +308,7 @@ namespace ChatService.Web.Tests.Controllers
                             .ThrowsAsync(expectedResponse);
             var json = JsonConvert.SerializeObject(message);
             var content = new StringContent(json, Encoding.Default, "application/json");
-            var response = await _httpClient.PostAsync($"/Conversations/{conversationId}/messages", content);
+            var response = await _httpClient.PostAsync($"api/Conversations/{conversationId}/messages", content);
 
             Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         }
@@ -331,12 +331,11 @@ namespace ChatService.Web.Tests.Controllers
 
             _conversationServiceMock.Setup(m => m.EnumerateConversations(senderProfile.Username, continuationToken, limit, lastSeenConversationTime))
                 .ReturnsAsync(enumerateResponse);
-            var response = await _httpClient.GetAsync($"/Conversations?username={senderProfile.Username}&limit={limit}&lastSeenConversationTime={lastSeenConversationTime}&continuationToken={continuationToken}");
+            var response = await _httpClient.GetAsync($"api/Conversations?username={senderProfile.Username}&limit={limit}&lastSeenConversationTime={lastSeenConversationTime}&continuationToken={continuationToken}");
             var responseContent = await response.Content.ReadAsStringAsync();
             var actualResponse = JsonConvert.DeserializeObject<EnumerateConversationMessagesResponse>(responseContent);
-
-            var expectedNextUri = $"/api/conversations?username={senderProfile.Username}&limit={limit}&lastSeenConversationTime={enumerateResponse.lastSeenConversationTime}&continuationToken={enumerateResponse.continuationToken}";
-            expectedNextUri = WebUtility.UrlEncode(expectedNextUri);
+            var encodedToken = WebUtility.UrlEncode(enumerateResponse.continuationToken);
+            var expectedNextUri = $"/api/conversations?username={senderProfile.Username}&limit={limit}&lastSeenConversationTime={enumerateResponse.lastSeenConversationTime}&continuationToken={encodedToken}";
             response.EnsureSuccessStatusCode();
             Assert.Equal(expectedNextUri, actualResponse.NextUri);
         }
@@ -347,7 +346,7 @@ namespace ChatService.Web.Tests.Controllers
             var expectedResponse = new SenderDoesNotExist(senderProfile.Username);
             _conversationServiceMock.Setup(m => m.EnumerateConversations("foo", null, null, null))
                 .ThrowsAsync(expectedResponse);
-            var response = await _httpClient.GetAsync($"/Conversations?username={senderProfile.Username}");
+            var response = await _httpClient.GetAsync($"api/Conversations?username={senderProfile.Username}");
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         }
         [Fact]
@@ -366,12 +365,12 @@ namespace ChatService.Web.Tests.Controllers
             var continuationToken = "toBeContinued";
             _conversationServiceMock.Setup(m => m.EnumerateConversationMessages(conversation.Id, continuationToken, limit, lastSeenMessageTime))
                 .ReturnsAsync(enumerateResponse);
-            var response = await _httpClient.GetAsync($"/Conversations/{conversation.Id}/messages?&limit={limit}&lastSeenMessageTime={lastSeenMessageTime}&continuationToken={continuationToken}");
+            var response = await _httpClient.GetAsync($"api/Conversations/{conversation.Id}/messages?&limit={limit}&lastSeenMessageTime={lastSeenMessageTime}&continuationToken={continuationToken}");
             var responseContent = await response.Content.ReadAsStringAsync();
             var actualResponse = JsonConvert.DeserializeObject<EnumerateConversationMessagesResponse>(responseContent);
-
-            var expectedNextUri = $"/api/conversations/{conversation.Id}/messages?&limit={limit}&lastSeenMessageTime={enumerateResponse.lastSeenMessageTime}&continuationToken={enumerateResponse.continuationToken}";
-            expectedNextUri =  WebUtility.UrlEncode(expectedNextUri);
+            var encodedToken = WebUtility.UrlEncode(enumerateResponse.continuationToken);
+            var expectedNextUri = $"/api/conversations/{conversation.Id}/messages?&limit={limit}&lastSeenMessageTime={enumerateResponse.lastSeenMessageTime}&continuationToken={encodedToken}";
+            
             response.EnsureSuccessStatusCode();
             Assert.Equal(expectedNextUri, actualResponse.NextUri);
         }
@@ -384,7 +383,7 @@ namespace ChatService.Web.Tests.Controllers
             var expectedResponse = new ConversationDoesNotExist(conversationId);
             _conversationServiceMock.Setup(m => m.EnumerateConversationMessages("foo_bar", null, null, null))
                 .ThrowsAsync(expectedResponse);
-            var response = await _httpClient.GetAsync($"/Conversations/{conversationId}/messages");
+            var response = await _httpClient.GetAsync($"api/Conversations/{conversationId}/messages");
             Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         }
     }

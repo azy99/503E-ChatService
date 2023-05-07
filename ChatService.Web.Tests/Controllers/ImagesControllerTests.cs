@@ -27,7 +27,7 @@ public class ImagesControllerTests : IClassFixture<WebApplicationFactory<Program
         byte[] imageContent = File.ReadAllBytes("../../../test.jpg");
         MemoryStream stream = new MemoryStream(imageContent);
         _fileStoreMock.Setup(m => m.DownloadFile("abcdef")).ReturnsAsync(new BlobResponse(ImageId: "abcdef", ContentType: "image/jpeg", Content: stream));
-        var response = await _httpClient.GetAsync($"/Images/abcdef");
+        var response = await _httpClient.GetAsync($"api/Images/abcdef");
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         _fileStoreMock.Verify(mock=>mock.DownloadFile("abcdef"), Times.Once);
     }
@@ -36,7 +36,7 @@ public class ImagesControllerTests : IClassFixture<WebApplicationFactory<Program
     public async Task DownloadImage_NotFound()
     {
         _fileStoreMock.Setup(m => m.DownloadFile("abcdef")).ReturnsAsync(new BlobResponse(ImageId: "abcdef", ContentType: null , Content: null));
-        var response = await _httpClient.GetAsync($"/Images/abcdef");
+        var response = await _httpClient.GetAsync($"api/Images/abcdef");
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         _fileStoreMock.Verify(mock=>mock.DownloadFile("abcdef"), Times.Once);
     }
@@ -56,14 +56,14 @@ public class ImagesControllerTests : IClassFixture<WebApplicationFactory<Program
         };
         using var formData = new MultipartFormDataContent();
         formData.Add(fileStreamContent);
-        var response = await _httpClient.PostAsync("/Images", formData);
+        var response = await _httpClient.PostAsync("api/Images", formData);
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
     
     [Fact]
     public async Task UploadImage_Null()
     {
-        var response = await _httpClient.PostAsync("/Images", null);
+        var response = await _httpClient.PostAsync("api/Images", null);
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
         _fileStoreMock.Verify(mock=>mock.UploadFile(null), Times.Never);
     }
