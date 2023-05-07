@@ -52,6 +52,5 @@ jobs:
         uses: azure/webapps-deploy@v2
         with:
           app-name: 'yunes-chibani-chat-service'
-          slot-name: 'Production'
           publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_05A2DD82914C49ECB7BC9CD4465D7AA1 }}
           package: .
