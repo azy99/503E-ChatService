@@ -107,6 +107,10 @@ namespace ChatService.Web.Controllers
             }
             catch (CosmosException ex)
             {
+                if (ex.StatusCode == HttpStatusCode.Conflict)
+                {
+                    return Conflict(ex.Message);
+                }
                 throw ex;
             }
         }
