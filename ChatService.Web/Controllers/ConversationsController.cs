@@ -5,6 +5,7 @@ using ChatService.Web.Services;
 using ChatService.Web.Storage;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.Cosmos;
 using System.Net;
 
 namespace ChatService.Web.Controllers
@@ -103,6 +104,10 @@ namespace ChatService.Web.Controllers
             catch (InvalidMessageParams ex)
             {
                 return BadRequest(ex.Message);
+            }
+            catch (CosmosException ex)
+            {
+                throw ex;
             }
         }
 

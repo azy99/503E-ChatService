@@ -2,6 +2,7 @@
 using ChatService.Web.Dtos.Messages;
 using ChatService.Web.Exceptions;
 using ChatService.Web.Storage;
+using Microsoft.Azure.Cosmos;
 
 namespace ChatService.Web.Services
 {
@@ -42,6 +43,10 @@ namespace ChatService.Web.Services
             catch(ConversationDoesNotExist ex)
             {
                 throw ex;
+            }
+            catch(CosmosException ex)
+            {
+                throw ex; 
             }
 
             UserMessage userMessage = new(
