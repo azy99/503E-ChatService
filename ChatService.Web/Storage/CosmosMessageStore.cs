@@ -26,11 +26,14 @@ namespace ChatService.Web.Storage
             }
             catch (CosmosException e)
             {
-                if (e.StatusCode == HttpStatusCode.Conflict)
-                {
-                    var postedMessage = await GetMessage(message.Id,message.ConversationId);
-                    return ToSendMessageResponse(ToEntity(postedMessage));
-                }
+                //Commented out because of functional tests requirements
+                //
+                //if (e.StatusCode == HttpStatusCode.Conflict)
+                //{
+                //    var postedMessage = await GetMessage(message.Id,message.ConversationId);
+                //    return ToSendMessageResponse(ToEntity(postedMessage));
+                //}
+                throw e;
             }
             return ToSendMessageResponse(messageEntity);
         }
