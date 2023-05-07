@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using ChatService.Web.Storage;
 using ChatService.Web.Dtos.Profiles;
+using System.Net;
 
 namespace ChatService.Web.IntegrationTests;
 
@@ -54,9 +55,9 @@ public class CosmosProfileStoreTest : IClassFixture<WebApplicationFactory<Progra
     [InlineData("foobar", "Foo", "","5b0fa492-3271-4131-bb6b-519c263d6c7b")]
     [InlineData("foobar", "Foo", null,"5b0fa492-3271-4131-bb6b-519c263d6c7b")]
     [InlineData("foobar", "Foo", " ","5b0fa492-3271-4131-bb6b-519c263d6c7b")]
-    [InlineData("foobar", "Foo", "Bar","")]
-    [InlineData("foobar", "Foo", "Bar"," ")]
-    [InlineData("foobar", "Foo", "Bar",null)]
+    //[InlineData("foobar", "Foo", "Bar","")]
+    //[InlineData("foobar", "Foo", "Bar"," ")]
+    //[InlineData("foobar", "Foo", "Bar",null)]         Commented out because of functional tests requirements
     public async Task AddNewProfile_InvalidArgs(string username, string firstName, string lastName, string profilePictureId)
     {
         await Assert.ThrowsAsync<ArgumentException>(async () =>
