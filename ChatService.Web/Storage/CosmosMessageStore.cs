@@ -26,7 +26,7 @@ namespace ChatService.Web.Storage
             }
             catch (CosmosException e)
             {
-                //Commented out and changed to default null because of functional tests requirements
+                //Commented out because of functional tests requirements
                 //
                 //if (e.StatusCode == HttpStatusCode.Conflict)
                 //{

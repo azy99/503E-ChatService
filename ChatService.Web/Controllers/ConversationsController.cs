@@ -122,19 +122,27 @@ namespace ChatService.Web.Controllers
             try
             {
                 var response = await _conversationService.EnumerateConversations(username, continuationToken, limit, lastSeenConversationTime);
-                var nextUri = $"/api/conversations?username={username}&";
-                if (limit != null && limit != 0)
+                string nextUri;
+                if (string.IsNullOrWhiteSpace(response.continuationToken))
                 {
-                    nextUri += $"limit={limit}&";
+                    nextUri = "";
                 }
-                if (response.lastSeenConversationTime != null && response.lastSeenConversationTime != 0)
+                else
                 {
-                    nextUri += $"lastSeenConversationTime={response.lastSeenConversationTime}&";
-                }
-                if (!string.IsNullOrEmpty(response.continuationToken))
-                {
-                    var continuationTokenEncoded = WebUtility.UrlEncode(response.continuationToken);
-                    nextUri += $"continuationToken={continuationTokenEncoded}";
+                    nextUri = $"/api/conversations?username={username}&";
+                    if (limit != null && limit != 0)
+                    {
+                        nextUri += $"limit={limit}&";
+                    }
+                    if (response.lastSeenConversationTime != null && response.lastSeenConversationTime != 0)
+                    {
+                        nextUri += $"lastSeenConversationTime={response.lastSeenConversationTime}&";
+                    }
+                    if (!string.IsNullOrEmpty(response.continuationToken))
+                    {
+                        var continuationTokenEncoded = WebUtility.UrlEncode(response.continuationToken);
+                        nextUri += $"continuationToken={continuationTokenEncoded}";
+                    }
                 }
                 return Ok(new EnumerateConversationsResponse(response.Conversations, nextUri));
             }
@@ -152,19 +160,27 @@ namespace ChatService.Web.Controllers
             {
                 var response = await _conversationService.EnumerateConversationMessages(conversationId, continuationToken,
                     limit, lastSeenMessageTime);
-                var nextUri = $"/api/conversations/{conversationId}/messages?&";
-                if (limit != null && limit != 0)
+                string nextUri;
+                if (string.IsNullOrWhiteSpace(response.continuationToken))
                 {
-                    nextUri += $"limit={limit}&";
+                    nextUri = "";
                 }
-                if (response.lastSeenMessageTime != null && response.lastSeenMessageTime != 0)
+                else
                 {
-                    nextUri += $"lastSeenMessageTime={lastSeenMessageTime}&";
-                }
-                if (!string.IsNullOrEmpty(response.continuationToken))
-                {
-                    var continuationTokenEncoded = WebUtility.UrlEncode(response.continuationToken);
-                    nextUri += $"continuationToken={continuationTokenEncoded}";
+                    nextUri = $"/api/conversations/{conversationId}/messages?&";
+                    if (limit != null && limit != 0)
+                    {
+                        nextUri += $"limit={limit}&";
+                    }
+                    if (response.lastSeenMessageTime != null && response.lastSeenMessageTime != 0)
+                    {
+                        nextUri += $"lastSeenMessageTime={lastSeenMessageTime}&";
+                    }
+                    if (!string.IsNullOrEmpty(response.continuationToken))
+                    {
+                        var continuationTokenEncoded = WebUtility.UrlEncode(response.continuationToken);
+                        nextUri += $"continuationToken={continuationTokenEncoded}";
+                    }
                 }
                 return Ok(new EnumerateConversationMessagesResponse(response.ConversationMessages, nextUri));
             }
