@@ -7,6 +7,17 @@ using ChatService.Web.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var configuration = new ConfigurationBuilder()
+    .AddEnvironmentVariables()
+    .Build();
+var cosmosConnectionString = configuration["COSMOS_CONNECTION_STRING"];
+var blobConnectionString = configuration["BLOB_CONNECTION_STRING"];
+var appSettings = new ConfigurationBuilder()
+    .AddJsonFile("appsettings.json")
+    .Build();
+appSettings["Cosmos:ConnectionString"] = cosmosConnectionString;
+appSettings["Blob:ConnectionString"] = blobConnectionString;
+
 // Add services to the container.
 
 builder.Services.AddControllers();
