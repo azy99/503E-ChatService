@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.Cosmos;
 using System.Net;
+using Microsoft.ApplicationInsights;
+using Microsoft.ApplicationInsights.Channel;
 
 namespace ChatService.Web.Controllers
 {
@@ -15,20 +17,24 @@ namespace ChatService.Web.Controllers
     public class conversationsController : ControllerBase { 
         private readonly IConversationService _conversationService;
         private readonly IMessageService _messageService;
-        private readonly IProfileStore _profileStore;
-        public conversationsController(IConversationService conversationService, IMessageService messageService, IProfileStore profileStore)
+        private readonly ILogger _logger;
+        private readonly TelemetryClient _telemetryClient;
+        public conversationsController(IConversationService conversationService, IMessageService messageService, IProfileStore profileStore, ILogger<conversationsController> logger, TelemetryClient telemetryClient)
         {
             _conversationService = conversationService;
             _messageService = messageService;
-            _profileStore = profileStore;
+            _logger = logger;
+            _telemetryClient = telemetryClient;
         }
         [HttpGet("{conversationId}")]
         public async Task<ActionResult<UserConversation>> GetConversation(string conversationId)
         {
             var conversation = await _conversationService.GetConversation(conversationId);
+            _telemetryClient.TrackEvent("GotConversation");
             if (conversation == null)
             {
-                return NotFound($"A User with conversationID {conversationId} was not found");
+                _logger.LogWarning("A Conversation with conversationID {conversationId} was not found", conversationId);
+                return NotFound($"A Conversation with conversationID {conversationId} was not found");
             }
             return Ok(conversation);
         }
@@ -36,8 +42,10 @@ namespace ChatService.Web.Controllers
         [HttpPost]
         public async Task<ActionResult<StartConversationResponse>> AddConversation(StartConversationRequest request)
         {
-            try {
+            try
+            {
                 StartConversationResponse response = await _conversationService.CreateConversation(request);
+                _telemetryClient.TrackEvent("ConversationAdded");
                 return CreatedAtAction(nameof(GetConversation), new { conversationId = response.Id }, response);
 
             }
@@ -45,7 +53,7 @@ namespace ChatService.Web.Controllers
             //{
             //    return BadRequest(ex.Message);
             //}
-            catch(ConversationNotTwoPeople ex)
+            catch (ConversationNotTwoPeople ex)
             {
                 return BadRequest(ex.Message);
             }
@@ -55,6 +63,8 @@ namespace ChatService.Web.Controllers
             }
             catch (ReceiverDoesNotExist ex)
             {
+                var participants = request.Participants.ToString();
+                _logger.LogWarning("A Recipient from the list of participants: {participants} was not found", participants);
                 return BadRequest(ex.Message);
             }
             catch (ParticipantsInvalidParams ex)
@@ -77,7 +87,8 @@ namespace ChatService.Web.Controllers
             var conversation = await _messageService.GetMessage(messageId, conversationId);
             if (conversation == null)
             {
-                return NotFound($"A User with conversationID {conversationId} was not found");
+                _logger.LogWarning("A Conversation with conversationID {conversationId} was not found", conversationId);
+                return NotFound($"A Conversation with conversationID {conversationId} was not found");
             }
             return Ok(conversation);
         }
@@ -87,6 +98,7 @@ namespace ChatService.Web.Controllers
             try
             {
                 SendMessageResponse response = await _messageService.PostMessageToConversation(conversationId, message);
+                _telemetryClient.TrackEvent("MessageAdded");
                 return CreatedAtAction(nameof(GetMessage), new { conversationId, messageId = message.Id }, response);
             }
             catch (ConversationDoesNotExist ex)
@@ -122,6 +134,7 @@ namespace ChatService.Web.Controllers
             try
             {
                 var response = await _conversationService.EnumerateConversations(username, continuationToken, limit, lastSeenConversationTime);
+                _telemetryClient.TrackEvent("EnumeratedConversations");
                 string nextUri;
                 if (string.IsNullOrWhiteSpace(response.continuationToken))
                 {
@@ -160,6 +173,7 @@ namespace ChatService.Web.Controllers
             {
                 var response = await _conversationService.EnumerateConversationMessages(conversationId, continuationToken,
                     limit, lastSeenMessageTime);
+                _telemetryClient.TrackEvent("EnumeratedMessages");
                 string nextUri;
                 if (string.IsNullOrWhiteSpace(response.continuationToken))
                 {

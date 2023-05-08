@@ -4,21 +4,24 @@ using Microsoft.Extensions.Options;
 using ChatService.Web.Configuration;
 using ChatService.Web.Storage;
 using ChatService.Web.Services;
+using Microsoft.ApplicationInsights.DependencyCollector;
 
 var builder = WebApplication.CreateBuilder(args);
 
-var configuration = new ConfigurationBuilder()
-    .AddEnvironmentVariables()
-    .Build();
-var cosmosConnectionString = configuration["COSMOS_CONNECTION_STRING"];
-var blobConnectionString = configuration["BLOB_CONNECTION_STRING"];
-var appSettings = new ConfigurationBuilder()
-    .AddJsonFile("appsettings.json")
-    .Build();
-appSettings["Cosmos:ConnectionString"] = cosmosConnectionString;
-appSettings["Blob:ConnectionString"] = blobConnectionString;
+// var configuration = new ConfigurationBuilder()
+//     .AddEnvironmentVariables()
+//     .Build();
+// var cosmosConnectionString = configuration["COSMOS_CONNECTION_STRING"];
+// var blobConnectionString = configuration["BLOB_CONNECTION_STRING"];
+// var appSettings = new ConfigurationBuilder()
+//     .AddJsonFile("appsettings.json")
+//     .Build();
+// appSettings["Cosmos:ConnectionString"] = cosmosConnectionString;
+// appSettings["Blob:ConnectionString"] = blobConnectionString;
 
 // Add services to the container.
+builder.Services.AddApplicationInsightsTelemetry();
+builder.Services.ConfigureTelemetryModule<DependencyTrackingTelemetryModule>((module, o) => { module.EnableSqlCommandTextInstrumentation = true; });
 
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
